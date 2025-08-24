@@ -33,6 +33,7 @@
             nativeBuildInputs = with pkgs; [
               shfmt
               alejandra
+              clang
             ];
           };
         };

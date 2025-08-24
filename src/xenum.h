@@ -12,7 +12,7 @@
 #define X_CASE_TO_CSTR(x)                                                      \
     case x:                                                                    \
         return #x;
-#define xenum_impl_to_cstr(name, KINDS_X)                                       \
+#define xenum_impl_to_cstr(name, KINDS_X)                                      \
     char const *name##_to_cstr(enum name const val)                            \
     {                                                                          \
         switch (val)                                                           \
@@ -27,7 +27,7 @@
     case x:                                                                    \
         printf(#x);                                                            \
         break;
-#define xenum_impl_debug_print(name, KINDS_X)                                   \
+#define xenum_impl_debug_print(name, KINDS_X)                                  \
     void name##_debug_print(enum name const val)                               \
     {                                                                          \
         switch (val)                                                           \

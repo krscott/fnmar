@@ -10,4 +10,4 @@
 *.h
 *.cpp
 *.hpp
-    : clang-format
+    : clang-format -i
