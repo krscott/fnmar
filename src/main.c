@@ -123,13 +123,13 @@ void cstrbuf_deinit(struct cstrbuf *const cstrbuf)
         break;
 
 #define ENUM_IMPL_DEBUG_PRINT(name, KINDS_X)                                   \
-    void name##_debug_print(enum name const x)                                 \
+    void name##_debug_print(enum name const val)                               \
     {                                                                          \
-        switch (x)                                                             \
+        switch (val)                                                           \
         {                                                                      \
             KINDS_X(X_CASE_DEBUG_PRINT)                                        \
         default:                                                               \
-            printf("(invalid %u)", x);                                         \
+            printf("(invalid %u)", val);                                       \
             break;                                                             \
         }                                                                      \
     }
@@ -170,15 +170,12 @@ void token_debug_print(struct token const token)
         }
         break;
 
-    case TOK_EOF:
-        printf("EOF");
-        break;
-
     case TOK_NONE:
     case TOK_PATTERN:
     case TOK_SEMI:
     case TOK_COLON:
     case TOK_CMD:
+    case TOK_EOF:
     default:
         printf("%.*s", (int)token.str.len, token.str.ptr);
         break;
