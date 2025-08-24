@@ -3,7 +3,7 @@
 *.nix: alejandra
 
 # Patterns separated with ; will trigger if any are matched
-*.sh;*.bash: shfmt -i 4 -ci -s -bn
+*.sh;*.bash: shfmt -i 4 -ci -s -bn -w
 
 # Newlines are also valid pattern separators
 *.c

@@ -94,6 +94,24 @@ struct str str_trim_whitespace(struct str s)
     return str_trim_right_whitespace(str_trim_left_whitespace(s));
 }
 
+// UNSAFE: Writes to `s.ptr[s.len]`
+char const *str_into_cstr_unsafe(struct str const s, char *const removed_char)
+{
+    if (removed_char)
+    {
+        *removed_char = s.ptr[s.len];
+    }
+    s.ptr[s.len] = '\0';
+
+    return s.ptr;
+}
+
+// UNSAFE: Writes to `s.ptr[s.len]`
+void str_revert_into_cstr_unsafe(struct str const s, char const removed_char)
+{
+    s.ptr[s.len] = removed_char;
+}
+
 struct cstrbuf
 {
     char *ptr;
@@ -417,51 +435,60 @@ struct file_pos find_file_pos( //
 ENUM_DEF(parser_state, PARSER_STATES);
 ENUM_IMPL_TO_CSTR(parser_state, PARSER_STATES);
 
-void config_find_match( //
-    struct str const haystack,
-    char const *const needle,
-    struct str *const command
+struct fnmar_parser
+{
+    enum parser_state state;
+    struct token token;
+    struct str tail;
+    struct str full_text;
+    bool unexpected_token;
+    bool is_done;
+};
+
+void fnmar_parser_start(
+    struct fnmar_parser *const parser, struct str const text
 )
 {
-    struct str remaining = str_trim_whitespace(haystack);
-    struct token token;
+    *parser = (struct fnmar_parser){
+        .full_text = text,
+        .tail = str_trim_whitespace(text),
+    };
+}
 
-    enum parser_state state = (enum parser_state)0;
-
-    bool unexpected_token = false;
-
-    while (token.kind != TOK_EOF && !unexpected_token)
+void fnmar_parser_next(struct fnmar_parser *const parser)
+{
+    if (!parser->is_done)
     {
-        printf("%-18s ", parser_state_to_cstr(state));
+        printf("%-18s ", parser_state_to_cstr(parser->state));
 
-        switch (state)
+        switch (parser->state)
         {
         case PS_LINE_START:
-            token = parse_line_start(remaining, &remaining);
+            parser->token = parse_line_start(parser->tail, &parser->tail);
             break;
 
         case PS_PATTERN:
-            token = parse_pattern(remaining, &remaining);
+            parser->token = parse_pattern(parser->tail, &parser->tail);
             break;
 
         case PS_PATTERN_DELIM:
-            token = parse_pattern_delim(remaining, &remaining);
+            parser->token = parse_pattern_delim(parser->tail, &parser->tail);
             break;
 
         case PS_COMMAND:
-            token = parse_command(remaining, &remaining);
+            parser->token = parse_command(parser->tail, &parser->tail);
             break;
         }
 
-        token_debug_print(token);
+        token_debug_print(parser->token);
 
-        switch (state)
+        switch (parser->state)
         {
         case PS_LINE_START:
-            switch (token.kind)
+            switch (parser->token.kind)
             {
             case TOK_NONE:
-                state = PS_PATTERN;
+                parser->state = PS_PATTERN;
                 break;
             case TOK_COMMENT:
             case TOK_EOF:
@@ -471,17 +498,17 @@ void config_find_match( //
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
-                unexpected_token = true;
+                parser->unexpected_token = true;
                 break;
             }
             break;
 
         case PS_PATTERN:
-            switch (token.kind)
+            switch (parser->token.kind)
             {
             case TOK_PATTERN:
                 // TODO
-                state = PS_PATTERN_DELIM;
+                parser->state = PS_PATTERN_DELIM;
                 break;
             case TOK_COMMENT:
             case TOK_NONE:
@@ -489,38 +516,38 @@ void config_find_match( //
             case TOK_COLON:
             case TOK_CMD:
             case TOK_EOF:
-                unexpected_token = true;
+                parser->unexpected_token = true;
                 break;
             }
             break;
 
         case PS_PATTERN_DELIM:
-            switch (token.kind)
+            switch (parser->token.kind)
             {
             case TOK_NONE:
-                state = PS_PATTERN;
+                parser->state = PS_PATTERN;
                 break;
             case TOK_SEMI:
                 // do nothing
                 break;
             case TOK_COLON:
-                state = PS_COMMAND;
+                parser->state = PS_COMMAND;
                 break;
             case TOK_COMMENT:
             case TOK_PATTERN:
             case TOK_CMD:
             case TOK_EOF:
-                unexpected_token = true;
+                parser->unexpected_token = true;
                 break;
             }
             break;
 
         case PS_COMMAND:
-            switch (token.kind)
+            switch (parser->token.kind)
             {
             case TOK_CMD:
                 // TODO
-                state = PS_LINE_START;
+                parser->state = PS_LINE_START;
                 break;
             case TOK_NONE:
             case TOK_COMMENT:
@@ -528,33 +555,35 @@ void config_find_match( //
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_EOF:
-                unexpected_token = true;
+                parser->unexpected_token = true;
                 break;
             }
             break;
         }
+
+        parser->is_done =
+            parser->token.kind == TOK_EOF || parser->unexpected_token;
     }
 
-    if (unexpected_token)
+    if (parser->unexpected_token)
     {
-        if (token.kind == TOK_EOF)
+        if (parser->token.kind == TOK_EOF)
         {
             printf("Unexpected end of file\n");
         }
         else
         {
-            struct file_pos pos = find_file_pos(haystack, remaining.ptr);
+            struct file_pos pos =
+                find_file_pos(parser->full_text, parser->tail.ptr);
             printf(
                 "Unexpected token at line %lu col %lu: '%.*s'\n",
                 pos.line + 1,
                 pos.column + 1,
-                (int)token.str.len,
-                token.str.ptr
+                (int)parser->token.str.len,
+                parser->token.str.ptr
             );
         }
     }
-
-    return;
 }
 
 int main(int const argc, char const *const *const argv)
@@ -569,14 +598,63 @@ int main(int const argc, char const *const *const argv)
         goto done;
     }
 
+    char const *const filename = argv[1];
+
     err = cstrbuf_init_from_file(&config_str, DEFAULT_CONFIG_FILENAME);
     if (err)
     {
         goto done;
     }
 
-    struct str cmd = {0};
-    config_find_match(cstrbuf_to_str(config_str), argv[1], &cmd);
+    struct fnmar_parser parser = {0};
+    fnmar_parser_start(&parser, cstrbuf_to_str(config_str));
+
+    bool found_match = false;
+
+    while (!parser.is_done)
+    {
+        fnmar_parser_next(&parser);
+
+        if (!found_match && parser.token.kind == TOK_PATTERN)
+        {
+            char c;
+            char const *pattern = str_into_cstr_unsafe(parser.token.str, &c);
+
+            found_match = 0 == fnmatch(pattern, filename, 0);
+            printf("Check pattern '%s': %u\n", pattern, found_match);
+
+            str_revert_into_cstr_unsafe(parser.token.str, c);
+        }
+
+        if (found_match && parser.token.kind == TOK_CMD)
+        {
+            size_t cmd_buf_size =
+                parser.token.str.len + sizeof(' ') + strlen(filename) + 1;
+
+            char *cmd = malloc(cmd_buf_size);
+            snprintf(
+                cmd,
+                cmd_buf_size,
+                "%.*s %s",
+                (int)parser.token.str.len,
+                parser.token.str.ptr,
+                filename
+            );
+
+            printf("Running: %s\n", cmd);
+            int exitcode = system(cmd);
+
+            if (exitcode != 0)
+            {
+                printf("Command non-zero exit code: %d\n", exitcode);
+            }
+
+            free(cmd);
+            goto done;
+        }
+    }
+
+    printf("Did not find pattern match for '%s'\n", filename);
 
 done:
     cstrbuf_deinit(&config_str);
