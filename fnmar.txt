@@ -1,0 +1,4 @@
+*.nix: alejandra
+*.sh;*.bash: shfmt -i 4 -ci -s -bn
+
+*.c;*.h: clang-format

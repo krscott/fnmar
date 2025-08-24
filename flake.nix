@@ -27,14 +27,15 @@
           default = finalDrv;
         };
 
-        # devShells = {
-        #   default = pkgs.mkShell {
-        #     inputsFrom = [finalDrv];
-        #     nativeBuildInputs = [
-        #       # add dev pkgs
-        #     ];
-        #   };
-        # };
+        devShells = {
+          default = pkgs.mkShell {
+            inputsFrom = [finalDrv];
+            nativeBuildInputs = with pkgs; [
+              shfmt
+              alejandra
+            ];
+          };
+        };
 
         formatter = pkgs.alejandra;
       }
