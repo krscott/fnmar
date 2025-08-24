@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <ctype.h>
 #include <fnmatch.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -23,6 +24,22 @@ struct str
     char *ptr;
     size_t len;
 };
+
+struct str str_trim_whitespace(struct str s)
+{
+    while (s.len > 0 && isspace(*s.ptr))
+    {
+        ++s.ptr;
+        --s.len;
+    }
+
+    while (s.len > 0 && isspace(s.ptr[s.len - 1]))
+    {
+        --s.len;
+    }
+
+    return s;
+}
 
 struct cstrbuf
 {
@@ -250,6 +267,8 @@ struct token parse_pattern(struct str input, struct str *const tail)
     }
 
     *tail = input;
+
+    token.str = str_trim_whitespace(token.str);
     return token;
 }
 
@@ -283,6 +302,8 @@ struct token parse_command(struct str input, struct str *const tail)
 
 done:
     *tail = input;
+
+    token.str = str_trim_whitespace(token.str);
     return token;
 }
 
