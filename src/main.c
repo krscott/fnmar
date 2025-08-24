@@ -207,7 +207,6 @@ void cstrbuf_deinit(struct cstrbuf *const cstrbuf)
     X(TOK_SEMI)                                                                \
     X(TOK_COLON)                                                               \
     X(TOK_CMD)                                                                 \
-    X(TOK_NEWLINE)                                                             \
     X(TOK_EOF)
 ENUM_DEF(token_kind, TOKEN_KINDS);
 ENUM_IMPL_DEBUG_PRINT(token_kind, TOKEN_KINDS);
@@ -225,17 +224,6 @@ void token_debug_print(struct token const token)
     printf(", `");
     switch (token.kind)
     {
-    case TOK_NEWLINE:
-        if (token.str.ptr[0] == '\n')
-        {
-            printf("\\n");
-        }
-        else
-        {
-            printf("\\r");
-        }
-        break;
-
     case TOK_NONE:
     case TOK_PATTERN:
     case TOK_SEMI:
@@ -255,18 +243,11 @@ enum token_kind get_delim_kind(char const c)
 
     switch (c)
     {
-    case '\0':
-        kind = TOK_EOF;
-        break;
     case ';':
         kind = TOK_SEMI;
         break;
     case ':':
         kind = TOK_COLON;
-        break;
-    case '\r':
-    case '\n':
-        kind = TOK_NEWLINE;
         break;
     default:
         kind = TOK_NONE;
@@ -485,7 +466,6 @@ void config_find_match( //
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
-            case TOK_NEWLINE:
             case TOK_EOF:
                 unexpected_token = true;
                 break;
@@ -504,7 +484,6 @@ void config_find_match( //
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
-            case TOK_NEWLINE:
             case TOK_EOF:
                 unexpected_token = true;
                 break;
@@ -517,7 +496,6 @@ void config_find_match( //
             case TOK_NONE:
                 state = PS_PATTERN;
                 break;
-            case TOK_NEWLINE:
             case TOK_SEMI:
                 // do nothing
                 break;
@@ -536,9 +514,6 @@ void config_find_match( //
         case PS_COMMAND:
             switch (token.kind)
             {
-            case TOK_NEWLINE:
-                state = PS_LINE_START;
-                break;
             case TOK_CMD:
                 // TODO
                 state = PS_LINE_START;
