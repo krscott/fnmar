@@ -380,14 +380,18 @@ struct file_pos
     size_t column;
 };
 
-struct file_pos find_token_pos(struct str const text, struct token const token)
+struct file_pos find_file_pos( //
+    struct str const text,
+    char const *const ptr
+)
 {
-    assert(text.ptr <= token.str.ptr);
-    assert(token.str.ptr - text.ptr < text.len);
+    assert(ptr != NULL);
+    assert(text.ptr <= ptr);
+    assert(ptr - text.ptr < text.len);
 
     struct file_pos pos = {0};
 
-    size_t token_index = token.str.ptr - text.ptr;
+    size_t token_index = ptr - text.ptr;
 
     for (size_t i = 0; i < token_index; ++i)
     {
@@ -460,13 +464,13 @@ void config_find_match( //
                 state = PS_PATTERN;
                 break;
             case TOK_COMMENT:
+            case TOK_EOF:
                 // do nothing
                 break;
             case TOK_PATTERN:
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
-            case TOK_EOF:
                 unexpected_token = true;
                 break;
             }
@@ -533,14 +537,21 @@ void config_find_match( //
 
     if (unexpected_token)
     {
-        struct file_pos pos = find_token_pos(haystack, token);
-        printf(
-            "Unexpected token at line %lu col %lu: '%.*s'\n",
-            pos.line + 1,
-            pos.column + 1,
-            (int)token.str.len,
-            token.str.ptr
-        );
+        if (token.kind == TOK_EOF)
+        {
+            printf("Unexpected end of file\n");
+        }
+        else
+        {
+            struct file_pos pos = find_file_pos(haystack, remaining.ptr);
+            printf(
+                "Unexpected token at line %lu col %lu: '%.*s'\n",
+                pos.line + 1,
+                pos.column + 1,
+                (int)token.str.len,
+                token.str.ptr
+            );
+        }
     }
 
     return;
