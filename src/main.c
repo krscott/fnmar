@@ -72,8 +72,8 @@ done:
     X(TOK_COLON)                                                               \
     X(TOK_CMD)                                                                 \
     X(TOK_EOF)
-ENUM_DEF(token_kind, TOKEN_KINDS);
-ENUM_IMPL_DEBUG_PRINT(token_kind, TOKEN_KINDS);
+xenum(token_kind, TOKEN_KINDS);
+xenum_impl_debug_print(token_kind, TOKEN_KINDS);
 
 struct token
 {
@@ -278,8 +278,8 @@ struct file_pos find_file_pos( //
     X(PS_PATTERN)                                                              \
     X(PS_PATTERN_DELIM)                                                        \
     X(PS_COMMAND)
-ENUM_DEF(parser_state, PARSER_STATES);
-ENUM_IMPL_TO_CSTR(parser_state, PARSER_STATES);
+xenum(parser_state, PARSER_STATES);
+xenum_impl_to_cstr(parser_state, PARSER_STATES);
 
 struct fnmar_parser
 {
