@@ -304,6 +304,14 @@ done:
     return token;
 }
 
+enum parser_state
+{
+    PS_PATTERN,
+    PS_PATTERN_DELIM,
+    PS_COMMAND,
+    PS_COMMAND_DELIM,
+};
+
 void config_find_match( //
     struct str const haystack,
     char const *const needle,
@@ -313,47 +321,115 @@ void config_find_match( //
     struct str remaining = haystack;
     struct token token;
 
+    enum parser_state state = PS_PATTERN;
+
     for (;;)
     {
-        for (;;)
+        switch (state)
         {
+        case PS_PATTERN:
             printf("# Pattern\n");
             token = parse_pattern(remaining, &remaining);
-            if (token.kind == TOK_EOF)
-            {
-                goto done;
-            }
-            token_debug_print(token);
+            break;
 
+        case PS_COMMAND:
+            printf("# Command\n");
+            token = parse_command(remaining, &remaining);
+            break;
+
+        case PS_PATTERN_DELIM:
+        case PS_COMMAND_DELIM:
             printf("# Delim\n");
             token = parse_delim(remaining, &remaining);
-            if (token.kind == TOK_EOF)
-            {
-                goto done;
-            }
-            token_debug_print(token);
+            break;
+        }
 
-            if (token.kind == TOK_COLON)
+        token_debug_print(token);
+
+        if (token.kind == TOK_EOF)
+        {
+            break;
+        }
+
+        switch (state)
+        {
+        case PS_PATTERN:
+            switch (token.kind)
             {
+            case TOK_PATTERN:
+                // TODO
+                state = PS_PATTERN_DELIM;
+                break;
+            case TOK_NONE:
+            case TOK_SEMI:
+            case TOK_COLON:
+            case TOK_CMD:
+            case TOK_NEWLINE:
+            case TOK_EOF:
+                assert(false && "unexpected token");
                 break;
             }
-        }
+            break;
 
-        printf("# Command\n");
-        token = parse_command(remaining, &remaining);
-        if (token.kind == TOK_EOF)
-        {
-            goto done;
-        }
-        token_debug_print(token);
+        case PS_PATTERN_DELIM:
+            switch (token.kind)
+            {
+            case TOK_NEWLINE:
+                state = PS_PATTERN;
+                break;
+            case TOK_SEMI:
+                state = PS_PATTERN;
+                break;
+            case TOK_COLON:
+                state = PS_COMMAND;
+                break;
+            case TOK_NONE:
+            case TOK_PATTERN:
+            case TOK_CMD:
+            case TOK_EOF:
+                assert(false && "unexpected token");
+                break;
+            }
+            break;
 
-        printf("# Newline\n");
-        token = parse_delim(remaining, &remaining);
-        if (token.kind == TOK_EOF)
-        {
-            goto done;
+        case PS_COMMAND:
+            switch (token.kind)
+            {
+            case TOK_NEWLINE:
+                state = PS_PATTERN;
+                break;
+            case TOK_CMD:
+                // TODO
+                state = PS_COMMAND_DELIM;
+                break;
+            case TOK_NONE:
+            case TOK_PATTERN:
+            case TOK_SEMI:
+            case TOK_COLON:
+            case TOK_EOF:
+                break;
+            }
+            break;
+
+        case PS_COMMAND_DELIM:
+            switch (token.kind)
+            {
+            case TOK_NEWLINE:
+                // do nothing - consume all newlines
+                break;
+            case TOK_NONE:
+                state = PS_PATTERN;
+                break;
+            case TOK_PATTERN:
+            case TOK_SEMI:
+            case TOK_COLON:
+            case TOK_CMD:
+            case TOK_EOF:
+                assert(false && "unexpected token");
+                break;
+            }
+            break;
         }
-        token_debug_print(token);
     }
 
 done:
