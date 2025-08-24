@@ -57,7 +57,18 @@ done:
     return;
 }
 
-struct str str_trim_whitespace(struct str s)
+struct str str_trim_left_char(struct str s, char const c)
+{
+    while (s.len > 0 && *s.ptr == c)
+    {
+        ++s.ptr;
+        --s.len;
+    }
+
+    return s;
+}
+
+struct str str_trim_left_whitespace(struct str s)
 {
     while (s.len > 0 && isspace(*s.ptr))
     {
@@ -65,12 +76,22 @@ struct str str_trim_whitespace(struct str s)
         --s.len;
     }
 
+    return s;
+}
+
+struct str str_trim_right_whitespace(struct str s)
+{
     while (s.len > 0 && isspace(s.ptr[s.len - 1]))
     {
         --s.len;
     }
 
     return s;
+}
+
+struct str str_trim_whitespace(struct str s)
+{
+    return str_trim_right_whitespace(str_trim_left_whitespace(s));
 }
 
 struct cstrbuf
@@ -255,32 +276,36 @@ enum token_kind get_delim_kind(char const c)
     return kind;
 }
 
-struct token parse_comment(struct str const input, struct str *const tail)
+struct token parse_line_start(struct str input, struct str *const tail)
 {
     struct token token = {0};
+
+    input = str_trim_left_whitespace(input);
 
     if (input.len == 0)
     {
         token.kind = TOK_EOF;
         *tail = input;
     }
-    else if (input.ptr[0] != '#')
-    {
-        token.kind = TOK_NONE;
-        *tail = input;
-    }
-    else
+    else if (input.ptr[0] == '#')
     {
         token.kind = TOK_COMMENT;
         str_split_at_delims(input, "\r\n", &token.str, tail);
+    }
+    else
+    {
+        token.kind = TOK_NONE;
+        *tail = input;
     }
 
     return token;
 }
 
-struct token parse_delim(struct str const input, struct str *const tail)
+struct token parse_pattern_delim(struct str input, struct str *const tail)
 {
     struct token token = {0};
+
+    input = str_trim_left_whitespace(input);
 
     if (input.len == 0)
     {
@@ -312,72 +337,98 @@ struct token parse_delim(struct str const input, struct str *const tail)
 
 struct token parse_pattern(struct str input, struct str *const tail)
 {
-    struct token token = {
-        .kind = TOK_EOF,
-        .str.ptr = input.ptr,
-    };
+    struct token token = {0};
 
-    if (input.len > 0)
+    input = str_trim_left_whitespace(input);
+
+    if (input.len == 0)
     {
-        token.kind = TOK_NONE;
-
-        while (input.len > 0 && !get_delim_kind(*input.ptr))
+        token.kind = TOK_EOF;
+        *tail = input;
+    }
+    else
+    {
+        str_split_at_delims(input, ";:\r\n", &token.str, tail);
+        token.str = str_trim_whitespace(token.str);
+        if (token.str.len > 0)
         {
-            ++input.ptr;
-            --input.len;
-
             token.kind = TOK_PATTERN;
-            ++token.str.len;
+        }
+        else
+        {
+            token = parse_pattern_delim(input, tail);
         }
     }
 
-    *tail = input;
-
-    token.str = str_trim_whitespace(token.str);
     return token;
 }
 
 struct token parse_command(struct str input, struct str *const tail)
 {
-    struct token token = {
-        .kind = TOK_EOF,
-        .str = input,
-    };
+    struct token token = {0};
 
-    if (input.len > 0)
+    input = str_trim_left_char(input, ' ');
+
+    if (input.len == 0)
     {
-        token.kind = TOK_NONE;
-
-        for (size_t i = 0; i < input.len; ++i)
+        token.kind = TOK_EOF;
+        *tail = input;
+    }
+    else
+    {
+        str_split_at_delims(input, "\r\n", &token.str, tail);
+        token.str = str_trim_whitespace(token.str);
+        if (token.str.len > 0)
         {
-            switch (input.ptr[i])
-            {
-            case '\0':
-            case '\r':
-            case '\n':
-                input.ptr += i;
-                input.len -= i;
-                token.str.len = i;
-                goto done;
-            }
-
             token.kind = TOK_CMD;
+        }
+        else
+        {
+            token.kind = TOK_NONE;
         }
     }
 
-done:
-    *tail = input;
-
-    token.str = str_trim_whitespace(token.str);
     return token;
+}
+
+struct file_pos
+{
+    // Zero-indexed line number
+    size_t line;
+    // Zero-indexed column number
+    size_t column;
+};
+
+struct file_pos find_token_pos(struct str const text, struct token const token)
+{
+    assert(text.ptr <= token.str.ptr);
+    assert(token.str.ptr - text.ptr < text.len);
+
+    struct file_pos pos = {0};
+
+    size_t token_index = token.str.ptr - text.ptr;
+
+    for (size_t i = 0; i < token_index; ++i)
+    {
+        if (text.ptr[i] == '\n')
+        {
+            ++pos.line;
+            pos.column = 0;
+        }
+        else
+        {
+            ++pos.column;
+        }
+    }
+
+    return pos;
 }
 
 #define PARSER_STATES(X)                                                       \
     X(PS_LINE_START)                                                           \
     X(PS_PATTERN)                                                              \
     X(PS_PATTERN_DELIM)                                                        \
-    X(PS_COMMAND)                                                              \
-    X(PS_LINE_END)
+    X(PS_COMMAND)
 ENUM_DEF(parser_state, PARSER_STATES);
 ENUM_IMPL_TO_CSTR(parser_state, PARSER_STATES);
 
@@ -387,43 +438,37 @@ void config_find_match( //
     struct str *const command
 )
 {
-    struct str remaining = haystack;
+    struct str remaining = str_trim_whitespace(haystack);
     struct token token;
 
     enum parser_state state = (enum parser_state)0;
 
     bool unexpected_token = false;
 
-    while (!unexpected_token)
+    while (token.kind != TOK_EOF && !unexpected_token)
     {
         printf("%-18s ", parser_state_to_cstr(state));
 
         switch (state)
         {
         case PS_LINE_START:
-            token = parse_comment(remaining, &remaining);
+            token = parse_line_start(remaining, &remaining);
             break;
 
         case PS_PATTERN:
             token = parse_pattern(remaining, &remaining);
             break;
 
-        case PS_COMMAND:
-            token = parse_command(remaining, &remaining);
+        case PS_PATTERN_DELIM:
+            token = parse_pattern_delim(remaining, &remaining);
             break;
 
-        case PS_PATTERN_DELIM:
-        case PS_LINE_END:
-            token = parse_delim(remaining, &remaining);
+        case PS_COMMAND:
+            token = parse_command(remaining, &remaining);
             break;
         }
 
         token_debug_print(token);
-
-        if (token.kind == TOK_EOF)
-        {
-            break;
-        }
 
         switch (state)
         {
@@ -434,7 +479,7 @@ void config_find_match( //
                 state = PS_PATTERN;
                 break;
             case TOK_COMMENT:
-                state = PS_LINE_END;
+                // do nothing
                 break;
             case TOK_PATTERN:
             case TOK_SEMI:
@@ -492,37 +537,17 @@ void config_find_match( //
             switch (token.kind)
             {
             case TOK_NEWLINE:
-                state = PS_PATTERN;
+                state = PS_LINE_START;
                 break;
             case TOK_CMD:
                 // TODO
-                state = PS_LINE_END;
-                break;
-            case TOK_NONE:
-            case TOK_COMMENT:
-            case TOK_PATTERN:
-            case TOK_SEMI:
-            case TOK_COLON:
-            case TOK_EOF:
-                unexpected_token = true;
-                break;
-            }
-            break;
-
-        case PS_LINE_END:
-            switch (token.kind)
-            {
-            case TOK_NEWLINE:
-                // do nothing - consume all newlines
-                break;
-            case TOK_NONE:
                 state = PS_LINE_START;
                 break;
+            case TOK_NONE:
             case TOK_COMMENT:
             case TOK_PATTERN:
             case TOK_SEMI:
             case TOK_COLON:
-            case TOK_CMD:
             case TOK_EOF:
                 unexpected_token = true;
                 break;
@@ -533,11 +558,13 @@ void config_find_match( //
 
     if (unexpected_token)
     {
+        struct file_pos pos = find_token_pos(haystack, token);
         printf(
-            "Unexpected token '%.*s' at position %lu\n",
+            "Unexpected token at line %lu col %lu: '%.*s'\n",
+            pos.line + 1,
+            pos.column + 1,
             (int)token.str.len,
-            token.str.ptr,
-            (token.str.ptr - haystack.ptr)
+            token.str.ptr
         );
     }
 
