@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 enum error
 {
@@ -24,6 +25,37 @@ struct str
     char *ptr;
     size_t len;
 };
+
+void str_split_at_delims(
+    struct str const s,
+    char const *const delims,
+    struct str *const head,
+    struct str *const tail
+)
+{
+    for (size_t i = 0; i < s.len; ++i)
+    {
+        if (strchr(delims, s.ptr[i]))
+        {
+            *head = (struct str){
+                .ptr = s.ptr,
+                .len = i,
+            };
+            *tail = (struct str){
+                .ptr = &s.ptr[i],
+                .len = s.len - i,
+            };
+
+            goto done;
+        }
+    }
+
+    *head = s;
+    *tail = (struct str){0};
+
+done:
+    return;
+}
 
 struct str str_trim_whitespace(struct str s)
 {
@@ -117,11 +149,24 @@ void cstrbuf_deinit(struct cstrbuf *const cstrbuf)
         KINDS_X(X_ENUM_VAR)                                                    \
     }
 
+#define X_CASE_TO_CSTR(x)                                                      \
+    case x:                                                                    \
+        return #x;
+#define ENUM_IMPL_TO_CSTR(name, KINDS_X)                                       \
+    char const *name##_to_cstr(enum name const val)                            \
+    {                                                                          \
+        switch (val)                                                           \
+        {                                                                      \
+            KINDS_X(X_CASE_TO_CSTR)                                            \
+        default:                                                               \
+            return "(unknown)";                                                \
+        }                                                                      \
+    }
+
 #define X_CASE_DEBUG_PRINT(x)                                                  \
     case x:                                                                    \
         printf(#x);                                                            \
         break;
-
 #define ENUM_IMPL_DEBUG_PRINT(name, KINDS_X)                                   \
     void name##_debug_print(enum name const val)                               \
     {                                                                          \
@@ -136,13 +181,13 @@ void cstrbuf_deinit(struct cstrbuf *const cstrbuf)
 
 #define TOKEN_KINDS(X)                                                         \
     X(TOK_NONE)                                                                \
+    X(TOK_COMMENT)                                                             \
     X(TOK_PATTERN)                                                             \
     X(TOK_SEMI)                                                                \
     X(TOK_COLON)                                                               \
     X(TOK_CMD)                                                                 \
     X(TOK_NEWLINE)                                                             \
     X(TOK_EOF)
-
 ENUM_DEF(token_kind, TOKEN_KINDS);
 ENUM_IMPL_DEBUG_PRINT(token_kind, TOKEN_KINDS);
 
@@ -208,6 +253,29 @@ enum token_kind get_delim_kind(char const c)
     }
 
     return kind;
+}
+
+struct token parse_comment(struct str const input, struct str *const tail)
+{
+    struct token token = {0};
+
+    if (input.len == 0)
+    {
+        token.kind = TOK_EOF;
+        *tail = input;
+    }
+    else if (input.ptr[0] != '#')
+    {
+        token.kind = TOK_NONE;
+        *tail = input;
+    }
+    else
+    {
+        token.kind = TOK_COMMENT;
+        str_split_at_delims(input, "\r\n", &token.str, tail);
+    }
+
+    return token;
 }
 
 struct token parse_delim(struct str const input, struct str *const tail)
@@ -304,13 +372,14 @@ done:
     return token;
 }
 
-enum parser_state
-{
-    PS_PATTERN,
-    PS_PATTERN_DELIM,
-    PS_COMMAND,
-    PS_COMMAND_DELIM,
-};
+#define PARSER_STATES(X)                                                       \
+    X(PS_LINE_START)                                                           \
+    X(PS_PATTERN)                                                              \
+    X(PS_PATTERN_DELIM)                                                        \
+    X(PS_COMMAND)                                                              \
+    X(PS_LINE_END)
+ENUM_DEF(parser_state, PARSER_STATES);
+ENUM_IMPL_TO_CSTR(parser_state, PARSER_STATES);
 
 void config_find_match( //
     struct str const haystack,
@@ -321,25 +390,30 @@ void config_find_match( //
     struct str remaining = haystack;
     struct token token;
 
-    enum parser_state state = PS_PATTERN;
+    enum parser_state state = (enum parser_state)0;
 
-    for (;;)
+    bool unexpected_token = false;
+
+    while (!unexpected_token)
     {
+        printf("%-18s ", parser_state_to_cstr(state));
+
         switch (state)
         {
+        case PS_LINE_START:
+            token = parse_comment(remaining, &remaining);
+            break;
+
         case PS_PATTERN:
-            printf("# Pattern\n");
             token = parse_pattern(remaining, &remaining);
             break;
 
         case PS_COMMAND:
-            printf("# Command\n");
             token = parse_command(remaining, &remaining);
             break;
 
         case PS_PATTERN_DELIM:
-        case PS_COMMAND_DELIM:
-            printf("# Delim\n");
+        case PS_LINE_END:
             token = parse_delim(remaining, &remaining);
             break;
         }
@@ -353,6 +427,26 @@ void config_find_match( //
 
         switch (state)
         {
+        case PS_LINE_START:
+            switch (token.kind)
+            {
+            case TOK_NONE:
+                state = PS_PATTERN;
+                break;
+            case TOK_COMMENT:
+                state = PS_LINE_END;
+                break;
+            case TOK_PATTERN:
+            case TOK_SEMI:
+            case TOK_COLON:
+            case TOK_CMD:
+            case TOK_NEWLINE:
+            case TOK_EOF:
+                unexpected_token = true;
+                break;
+            }
+            break;
+
         case PS_PATTERN:
             switch (token.kind)
             {
@@ -360,13 +454,14 @@ void config_find_match( //
                 // TODO
                 state = PS_PATTERN_DELIM;
                 break;
+            case TOK_COMMENT:
             case TOK_NONE:
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
             case TOK_NEWLINE:
             case TOK_EOF:
-                assert(false && "unexpected token");
+                unexpected_token = true;
                 break;
             }
             break;
@@ -374,20 +469,21 @@ void config_find_match( //
         case PS_PATTERN_DELIM:
             switch (token.kind)
             {
-            case TOK_NEWLINE:
+            case TOK_NONE:
                 state = PS_PATTERN;
                 break;
+            case TOK_NEWLINE:
             case TOK_SEMI:
-                state = PS_PATTERN;
+                // do nothing
                 break;
             case TOK_COLON:
                 state = PS_COMMAND;
                 break;
-            case TOK_NONE:
+            case TOK_COMMENT:
             case TOK_PATTERN:
             case TOK_CMD:
             case TOK_EOF:
-                assert(false && "unexpected token");
+                unexpected_token = true;
                 break;
             }
             break;
@@ -400,39 +496,51 @@ void config_find_match( //
                 break;
             case TOK_CMD:
                 // TODO
-                state = PS_COMMAND_DELIM;
+                state = PS_LINE_END;
                 break;
             case TOK_NONE:
+            case TOK_COMMENT:
             case TOK_PATTERN:
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_EOF:
+                unexpected_token = true;
                 break;
             }
             break;
 
-        case PS_COMMAND_DELIM:
+        case PS_LINE_END:
             switch (token.kind)
             {
             case TOK_NEWLINE:
                 // do nothing - consume all newlines
                 break;
             case TOK_NONE:
-                state = PS_PATTERN;
+                state = PS_LINE_START;
                 break;
+            case TOK_COMMENT:
             case TOK_PATTERN:
             case TOK_SEMI:
             case TOK_COLON:
             case TOK_CMD:
             case TOK_EOF:
-                assert(false && "unexpected token");
+                unexpected_token = true;
                 break;
             }
             break;
         }
     }
 
-done:
+    if (unexpected_token)
+    {
+        printf(
+            "Unexpected token '%.*s' at position %lu\n",
+            (int)token.str.len,
+            token.str.ptr,
+            (token.str.ptr - haystack.ptr)
+        );
+    }
+
     return;
 }
 
