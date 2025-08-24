@@ -9,8 +9,7 @@ struct str
     size_t len;
 };
 
-#define str_debug_print(s) printf("%.*s", (int)(s).len, (s).ptr)
-#define str_debug_println(s) printf("%.*s\n", (int)(s).len, (s).ptr)
+#define str_format_args(s) ((int)(s).len), ((s).ptr)
 
 void str_split_at_delims(
     struct str const s,

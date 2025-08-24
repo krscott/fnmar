@@ -95,7 +95,7 @@ void token_debug_print(struct token const token)
     case TOK_CMD:
     case TOK_EOF:
     default:
-        printf("%.*s", (int)token.str.len, token.str.ptr);
+        printf("%.*s", str_format_args(token.str));
         break;
     }
     printf("` }\n");
@@ -425,8 +425,7 @@ void fnmar_parser_next(struct fnmar_parser *const parser)
                 "Unexpected token at line %lu col %lu: '%.*s'\n",
                 pos.line + 1,
                 pos.column + 1,
-                (int)parser->token.str.len,
-                parser->token.str.ptr
+                str_format_args(parser->token.str)
             );
         }
     }
@@ -482,8 +481,7 @@ int main(int const argc, char const *const *const argv)
                 cmd,
                 cmd_buf_size,
                 "%.*s %s",
-                (int)parser.token.str.len,
-                parser.token.str.ptr,
+                str_format_args(parser.token.str),
                 filename
             );
 
