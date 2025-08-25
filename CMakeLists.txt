@@ -29,6 +29,7 @@ else()
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    message("Debug build: Sanitizers enabled")
     target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
     target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
 endif()
