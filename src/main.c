@@ -73,7 +73,7 @@ done:
     X(TOK_CMD)                                                                 \
     X(TOK_EOF)
 xenum(token_kind, TOKEN_KINDS);
-static xenum_impl_debug_print(token_kind, TOKEN_KINDS);
+static xenum_impl_to_cstr(token_kind, TOKEN_KINDS);
 
 struct token
 {
@@ -83,9 +83,11 @@ struct token
 
 static void token_debug_print(struct token const token)
 {
-    printf("token { ");
-    token_kind_debug_print(token.kind);
-    printf(", `%.*s` }\n", str_format_args(token.str));
+    printf(
+        "token { %s, `%.*s` }\n",
+        token_kind_to_cstr(token.kind),
+        str_format_args(token.str)
+    );
 }
 
 static enum token_kind get_delim_kind(char const c)
