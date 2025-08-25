@@ -39,11 +39,6 @@ void cstrbuf_deinit(struct cstrbuf *const cstrbuf);
 
 struct str cstrbuf_to_str(struct cstrbuf const cstrbuf);
 
-enum error cstrbuf_init_from_file( //
-    struct cstrbuf *const cstrbuf,
-    char const *const filepath
-);
-
 struct str cstrbuf_to_str(struct cstrbuf const cstrbuf);
 
 #endif

@@ -73,9 +73,9 @@ done:
     X(TOK_CMD)                                                                 \
     X(TOK_EOF)
 xenum(token_kind, TOKEN_KINDS);
-xenum_impl_debug_print(token_kind, TOKEN_KINDS);
+xenum_impl_debug_print(token_kind, TOKEN_KINDS)
 
-struct token
+    struct token
 {
     enum token_kind kind;
     struct str str;
@@ -251,7 +251,7 @@ struct file_pos find_file_pos( //
 {
     assert(ptr != NULL);
     assert(text.ptr <= ptr);
-    assert(ptr - text.ptr < text.len);
+    assert((size_t)(ptr - text.ptr) < text.len);
 
     struct file_pos pos = {0};
 
@@ -279,9 +279,9 @@ struct file_pos find_file_pos( //
     X(PS_PATTERN_DELIM)                                                        \
     X(PS_COMMAND)
 xenum(parser_state, PARSER_STATES);
-xenum_impl_to_cstr(parser_state, PARSER_STATES);
+xenum_impl_to_cstr(parser_state, PARSER_STATES)
 
-struct fnmar_parser
+    struct fnmar_parser
 {
     enum parser_state state;
     struct token token;
