@@ -21,14 +21,17 @@
         default:                                                               \
             return "(unknown)";                                                \
         }                                                                      \
-    }
+    }                                                                          \
+    static_assert(1, "")
 
 #define X_CASE_DEBUG_PRINT(x)                                                  \
     case x:                                                                    \
         printf(#x);                                                            \
         break;
+#define xenum_decl_debug_print(name)                                           \
+    void name##_debug_print(enum name const val)
 #define xenum_impl_debug_print(name, KINDS_X)                                  \
-    void name##_debug_print(enum name const val)                               \
+    xenum_decl_debug_print(name)                                               \
     {                                                                          \
         switch (val)                                                           \
         {                                                                      \
@@ -37,6 +40,7 @@
             printf("(invalid %u)", val);                                       \
             break;                                                             \
         }                                                                      \
-    }
+    }                                                                          \
+    static_assert(1, "")
 
 #endif

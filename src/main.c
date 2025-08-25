@@ -19,7 +19,7 @@ enum error
 
 static char const *const DEFAULT_CONFIG_FILENAME = "fnmar.txt";
 
-enum error cstrbuf_init_from_file( //
+static enum error cstrbuf_init_from_file( //
     struct cstrbuf *const cstrbuf,
     char const *const filepath
 )
@@ -35,7 +35,7 @@ enum error cstrbuf_init_from_file( //
     }
 
     fseek(file, 0, SEEK_END);
-    size_t const len = ftell(file);
+    size_t const len = (size_t)ftell(file);
     fseek(file, 0, SEEK_SET);
 
     char *buf = malloc(len + 1);
@@ -73,35 +73,22 @@ done:
     X(TOK_CMD)                                                                 \
     X(TOK_EOF)
 xenum(token_kind, TOKEN_KINDS);
-xenum_impl_debug_print(token_kind, TOKEN_KINDS)
+static xenum_impl_debug_print(token_kind, TOKEN_KINDS);
 
-    struct token
+struct token
 {
     enum token_kind kind;
     struct str str;
 };
 
-void token_debug_print(struct token const token)
+static void token_debug_print(struct token const token)
 {
     printf("token { ");
     token_kind_debug_print(token.kind);
-    printf(", `");
-    switch (token.kind)
-    {
-    case TOK_NONE:
-    case TOK_PATTERN:
-    case TOK_SEMI:
-    case TOK_COLON:
-    case TOK_CMD:
-    case TOK_EOF:
-    default:
-        printf("%.*s", str_format_args(token.str));
-        break;
-    }
-    printf("` }\n");
+    printf(", `%.*s` }\n", str_format_args(token.str));
 }
 
-enum token_kind get_delim_kind(char const c)
+static enum token_kind get_delim_kind(char const c)
 {
     enum token_kind kind;
 
@@ -121,7 +108,7 @@ enum token_kind get_delim_kind(char const c)
     return kind;
 }
 
-struct token parse_line_start(struct str input, struct str *const tail)
+static struct token parse_line_start(struct str input, struct str *const tail)
 {
     struct token token = {0};
 
@@ -146,7 +133,10 @@ struct token parse_line_start(struct str input, struct str *const tail)
     return token;
 }
 
-struct token parse_pattern_delim(struct str input, struct str *const tail)
+static struct token parse_pattern_delim( //
+    struct str input,
+    struct str *const tail
+)
 {
     struct token token = {0};
 
@@ -167,7 +157,7 @@ struct token parse_pattern_delim(struct str input, struct str *const tail)
                 .len = 1,
             };
             *tail = (struct str){
-                .ptr = input.ptr + 1,
+                .ptr = &input.ptr[1],
                 .len = input.len - 1,
             };
         }
@@ -180,7 +170,7 @@ struct token parse_pattern_delim(struct str input, struct str *const tail)
     return token;
 }
 
-struct token parse_pattern(struct str input, struct str *const tail)
+static struct token parse_pattern(struct str input, struct str *const tail)
 {
     struct token token = {0};
 
@@ -208,7 +198,7 @@ struct token parse_pattern(struct str input, struct str *const tail)
     return token;
 }
 
-struct token parse_command(struct str input, struct str *const tail)
+static struct token parse_command(struct str input, struct str *const tail)
 {
     struct token token = {0};
 
@@ -244,7 +234,7 @@ struct file_pos
     size_t column;
 };
 
-struct file_pos find_file_pos( //
+static struct file_pos find_file_pos( //
     struct str const text,
     char const *const ptr
 )
@@ -255,7 +245,7 @@ struct file_pos find_file_pos( //
 
     struct file_pos pos = {0};
 
-    size_t token_index = ptr - text.ptr;
+    size_t token_index = (size_t)(ptr - text.ptr);
 
     for (size_t i = 0; i < token_index; ++i)
     {
@@ -279,9 +269,9 @@ struct file_pos find_file_pos( //
     X(PS_PATTERN_DELIM)                                                        \
     X(PS_COMMAND)
 xenum(parser_state, PARSER_STATES);
-xenum_impl_to_cstr(parser_state, PARSER_STATES)
+static xenum_impl_to_cstr(parser_state, PARSER_STATES);
 
-    struct fnmar_parser
+struct fnmar_parser
 {
     enum parser_state state;
     struct token token;
@@ -291,8 +281,9 @@ xenum_impl_to_cstr(parser_state, PARSER_STATES)
     bool is_done;
 };
 
-void fnmar_parser_start(
-    struct fnmar_parser *const parser, struct str const text
+static void fnmar_parser_start( //
+    struct fnmar_parser *const parser,
+    struct str const text
 )
 {
     *parser = (struct fnmar_parser){
@@ -301,7 +292,7 @@ void fnmar_parser_start(
     };
 }
 
-void fnmar_parser_next(struct fnmar_parser *const parser)
+static void fnmar_parser_next(struct fnmar_parser *const parser)
 {
     if (!parser->is_done)
     {
@@ -502,5 +493,5 @@ int main(int const argc, char const *const *const argv)
 
 done:
     cstrbuf_deinit(&config_str);
-    return err;
+    return (int)err;
 }

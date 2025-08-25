@@ -19,11 +19,18 @@
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
 
+        useClang = true;
+
         # Final derivation including any overrides made to output package
         finalDrv = self.packages.${system}.fnmar;
       in {
         packages = {
-          fnmar = pkgs.callPackage ./. {};
+          fnmar = pkgs.callPackage ./. {
+            stdenv =
+              if useClang
+              then pkgs.clangStdenv
+              else pkgs.stdenv;
+          };
           default = finalDrv;
         };
 
@@ -33,8 +40,17 @@
             nativeBuildInputs = with pkgs; [
               shfmt
               alejandra
+              clang-tools # NOTE: clang-tools must come before clang
               clang
             ];
+
+            shellHook = ''
+              ${
+                if useClang
+                then "export CC=clang"
+                else ""
+              }
+            '';
           };
         };
 
