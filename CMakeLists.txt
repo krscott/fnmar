@@ -9,7 +9,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(src)
 
-
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(
         ${PROJECT_NAME} PRIVATE -Weverything
@@ -28,5 +27,11 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
 endif()
+
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
+    target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
+endif()
+
 install(TARGETS ${PROJECT_NAME})
 

@@ -8,6 +8,8 @@ if [ $# -gt 0 ]; then
     shift
 fi
 
+CMAKE_ARGS=${CMAKE_ARGS:--DCMAKE_BUILD_TYPE=Debug}
+
 appname=fnmar
 
 usage() {
@@ -17,7 +19,7 @@ usage() {
 configure() {
     (
         set -x
-        cmake -B build
+        cmake -B build $CMAKE_ARGS
     )
 }
 
