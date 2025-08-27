@@ -426,13 +426,6 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
 
 int main(int const argc, char const *const *const argv)
 {
-    struct cstrbuf foo = {0};
-    assert(cstrbuf_extend_cstr(&foo, "foo "));
-    assert(cstrbuf_extend_cstr(&foo, "bar "));
-    assert(cstrbuf_extend_cstr(&foo, "baz "));
-    printf("'%s' (%lu/%lu)\n", foo.ptr, foo.len, foo.cap);
-    cstrbuf_deinit(&foo);
-
     enum error err = OK;
     struct cstrbuf config_str = {0};
 
