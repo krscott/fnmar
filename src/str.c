@@ -1,7 +1,10 @@
 
 #include "str.h"
+#include "dynamic_array.h"
 
 #include <ctype.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -84,23 +87,61 @@ char const *str_into_cstr_unsafe(struct str const s, char *const removed_char)
     return s.ptr;
 }
 
+//
+// cstrbuf
+//
+
+void cstrbuf_debug_print(struct cstrbuf const b)
+{
+    printf("%lu %lu '%s'\n", b.len, b.cap, b.ptr);
+}
+
+void cstrbuf_deinit(struct cstrbuf *const b)
+{
+    if (b->ptr)
+    {
+        free(b->ptr);
+    }
+}
+
 void str_revert_into_cstr_unsafe(struct str const s, char const removed_char)
 {
     s.ptr[s.len] = removed_char;
 }
 
-struct str cstrbuf_to_str(struct cstrbuf const cstrbuf)
+struct str cstrbuf_to_str(struct cstrbuf const b)
 {
     return (struct str){
-        .ptr = cstrbuf.ptr,
-        .len = cstrbuf.len,
+        .ptr = b.ptr,
+        .len = b.len,
     };
 }
 
-void cstrbuf_deinit(struct cstrbuf *const cstrbuf)
+bool cstrbuf_extend_cstrn(
+    struct cstrbuf *const b, char const *cstr, size_t const n
+)
 {
-    if (cstrbuf->ptr)
+    char *extension;
+
+    size_t old_len = b->len;
+    bool const success = da_extend_uninit(b, n + 1, &extension);
+
+    if (success)
     {
-        free(cstrbuf->ptr);
+        size_t i = 0;
+        for (; i < n && *cstr; ++i)
+        {
+            *extension++ = *cstr++;
+        }
+        *extension = '\0';
+
+        b->len = old_len + i;
     }
+
+    return success;
+}
+
+bool cstrbuf_extend_cstr(struct cstrbuf *const b, char const *const cstr)
+{
+    return cstrbuf_extend_cstrn(b, cstr, strlen(cstr));
 }
