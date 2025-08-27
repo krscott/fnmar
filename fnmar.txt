@@ -1,13 +1,17 @@
 # syntax:
 #   filename-match pattern : command
-*.nix: alejandra
+# Use '%' to insert filename
+*.nix: alejandra %
 
 # Patterns separated with ; will trigger if any are matched
-*.sh;*.bash: shfmt -i 4 -ci -s -bn -w
+*.sh;*.bash: shfmt -i 4 -ci -s -bn -w %
 
 # Newlines are also valid pattern separators
 *.c
 *.h
 *.cpp
 *.hpp
-    : clang-format -i
+    : clang-format -i %
+
+# Can use '%' multiple times
+* : echo "Error: Did not format '%' - No rule for '%' file ext"

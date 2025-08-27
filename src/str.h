@@ -13,7 +13,10 @@ struct str
 
 #define str_format_args(s) ((int)(s).len), ((s).ptr)
 
-void str_split_at_delims(
+bool str_split_at_delims(
+    struct str s, char const *delims, struct str *head, struct str *tail
+);
+bool str_split_delims(
     struct str s, char const *delims, struct str *head, struct str *tail
 );
 struct str str_trim_left_char(struct str s, char c);
@@ -38,5 +41,6 @@ void cstrbuf_deinit(struct cstrbuf *b);
 struct str cstrbuf_to_str(struct cstrbuf b);
 bool cstrbuf_extend_cstrn(struct cstrbuf *b, char const *cstr, size_t n);
 bool cstrbuf_extend_cstr(struct cstrbuf *b, char const *cstr);
+bool cstrbuf_extend_str(struct cstrbuf *b, struct str s);
 
 #endif

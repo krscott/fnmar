@@ -466,27 +466,36 @@ int main(int const argc, char const *const *const argv)
 
         if (found_match && parser.token.kind == TOK_CMD)
         {
-            size_t cmd_buf_size =
-                parser.token.str.len + sizeof(' ') + strlen(filename) + 1;
+            // Replace "%" with filename
 
-            char *cmd = malloc(cmd_buf_size);
-            snprintf(
-                cmd,
-                cmd_buf_size,
-                "%.*s %s",
-                str_format_args(parser.token.str),
-                filename
-            );
+            struct cstrbuf cmd = {0};
 
-            printf("Running: %s\n", cmd);
-            int exitcode = system(cmd);
+            struct str head = {0};
+            struct str tail = parser.token.str;
+
+            bool is_split;
+
+            do
+            {
+                is_split = str_split_delims(tail, "%", &head, &tail);
+
+                cstrbuf_extend_str(&cmd, head);
+
+                if (is_split)
+                {
+                    cstrbuf_extend_cstr(&cmd, filename);
+                }
+            } while (is_split);
+
+            printf("Running: %s\n", cmd.ptr);
+            int exitcode = system(cmd.ptr);
 
             if (exitcode != 0)
             {
                 printf("Command non-zero exit code: %d\n", exitcode);
             }
 
-            free(cmd);
+            cstrbuf_deinit(&cmd);
             goto done;
         }
     }

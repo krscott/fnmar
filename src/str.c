@@ -8,13 +8,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void str_split_at_delims(
+bool str_split_at_delims(
     struct str const s,
     char const *const delims,
     struct str *const head,
     struct str *const tail
 )
 {
+    bool success = false;
+
     for (size_t i = 0; i < s.len; ++i)
     {
         if (strchr(delims, s.ptr[i]))
@@ -28,6 +30,8 @@ void str_split_at_delims(
                 .len = s.len - i,
             };
 
+            success = true;
+
             goto done;
         }
     }
@@ -36,7 +40,25 @@ void str_split_at_delims(
     *tail = (struct str){0};
 
 done:
-    return;
+    return success;
+}
+
+bool str_split_delims(
+    struct str const s,
+    char const *const delims,
+    struct str *const head,
+    struct str *const tail
+)
+{
+    bool const is_split = str_split_at_delims(s, delims, head, tail);
+
+    if (is_split)
+    {
+        ++tail->ptr;
+        --tail->len;
+    }
+
+    return is_split;
 }
 
 struct str str_trim_left_char(struct str s, char const c)
@@ -144,4 +166,9 @@ bool cstrbuf_extend_cstrn(
 bool cstrbuf_extend_cstr(struct cstrbuf *const b, char const *const cstr)
 {
     return cstrbuf_extend_cstrn(b, cstr, strlen(cstr));
+}
+
+bool cstrbuf_extend_str(struct cstrbuf *const b, struct str const s)
+{
+    return cstrbuf_extend_cstrn(b, s.ptr, s.len);
 }
