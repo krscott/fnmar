@@ -7,6 +7,7 @@ project(
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_subdirectory(lib/krs)
 add_subdirectory(src)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
