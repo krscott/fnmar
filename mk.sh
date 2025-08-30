@@ -34,6 +34,12 @@ build() {
         set -x
         cmake --build build
     )
+
+    # Only copy over debug compile_commands.json--Release uses unity build
+    if [ -n "${DEBUG:-}" ] && [ -f build/compile_commands.json ]; then
+        mkdir -p .compile-db
+        cp build/compile_commands.json .compile-db
+    fi
 }
 
 run() {

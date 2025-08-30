@@ -1,3 +1,7 @@
 CompileFlags:
+
+  # compile_commands.json copied here by mk.sh
+  CompilationDatabase: ".compile-db"
+
   Add:
     - -Wno-unused-macros

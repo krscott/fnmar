@@ -4,7 +4,6 @@ project(
     LANGUAGES C
 )
 
-# Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -27,10 +26,14 @@ else()
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    message("Debug build: Sanitizers enabled")
+    message("Debug build")
+
     add_compile_options(-fsanitize=undefined -fsanitize=address)
     add_link_options(-fsanitize=undefined -fsanitize=address)
 else()
+    message("Release build")
+    set(CMAKE_UNITY_BUILD ON)
+
     add_compile_options(-Werror -Os)
 endif()
 
