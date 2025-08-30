@@ -7,12 +7,9 @@ project(
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_subdirectory(lib/krs)
-add_subdirectory(src)
-
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE -Weverything
+    add_compile_options(
+        -Weverything
 
         # Based on project rules
         -Wno-declaration-after-statement
@@ -26,14 +23,19 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
         -Wno-used-but-marked-unused
     )
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
+    add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build: Sanitizers enabled")
-    target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
-    target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined -fsanitize=address)
+    add_compile_options(-fsanitize=undefined -fsanitize=address)
+    add_link_options(-fsanitize=undefined -fsanitize=address)
+else()
+    add_compile_options(-Werror -Os)
 endif()
+
+add_subdirectory(lib/krs)
+add_subdirectory(src)
 
 install(TARGETS ${PROJECT_NAME})
 
