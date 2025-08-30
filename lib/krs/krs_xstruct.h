@@ -1,7 +1,7 @@
-#ifndef XSTRUCT_H_
-#define XSTRUCT_H_
+#ifndef KRS_XSTRUCT_H_
+#define KRS_XSTRUCT_H_
 
-#include "prelude.h"
+#include "krs_types.h"
 #include <assert.h>
 
 #define XSTRUCT_FIELD_xf_simple(type, varname) type varname

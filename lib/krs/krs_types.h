@@ -1,5 +1,5 @@
-#ifndef PRELUDE_H_
-#define PRELUDE_H_
+#ifndef KRS_TYPES_H_
+#define KRS_TYPES_H_
 
 #include <assert.h>
 #include <stdint.h>

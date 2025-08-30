@@ -1,4 +1,4 @@
-#include "dynamic_array.h"
+#include "krs_dynamic_array.h"
 #include <stdint.h>
 #include <string.h>
 

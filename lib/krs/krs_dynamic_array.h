@@ -1,5 +1,5 @@
-#ifndef DYNAMIC_ARRAY_H_
-#define DYNAMIC_ARRAY_H_
+#ifndef KRS_DYNAMIC_ARRAY_H_
+#define KRS_DYNAMIC_ARRAY_H_
 
 #include <assert.h>
 #include <stdbool.h>

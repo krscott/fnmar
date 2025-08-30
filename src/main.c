@@ -1,6 +1,6 @@
-#include "str.h"
-#include "xenum.h"
-#include "xstruct.h"
+#include "krs_str.h"
+#include "krs_xenum.h"
+#include "krs_xstruct.h"
 
 #include <assert.h>
 #include <fnmatch.h>

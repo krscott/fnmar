@@ -1,5 +1,5 @@
-#ifndef STR_H_
-#define STR_H_
+#ifndef KRS_STR_H_
+#define KRS_STR_H_
 
 #include <stdbool.h>
 #include <stddef.h>

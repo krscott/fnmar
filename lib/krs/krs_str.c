@@ -1,6 +1,5 @@
-
-#include "str.h"
-#include "dynamic_array.h"
+#include "krs_str.h"
+#include "krs_dynamic_array.h"
 
 #include <ctype.h>
 #include <stddef.h>

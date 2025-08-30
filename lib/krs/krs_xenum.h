@@ -1,5 +1,5 @@
-#ifndef XENUM_H_
-#define XENUM_H_
+#ifndef KRS_XENUM_H_
+#define KRS_XENUM_H_
 
 #include <assert.h>
 
