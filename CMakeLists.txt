@@ -4,8 +4,6 @@ project(
     LANGUAGES C
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
         -Weverything
@@ -27,6 +25,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     add_compile_options(-fsanitize=undefined -fsanitize=address)
     add_link_options(-fsanitize=undefined -fsanitize=address)

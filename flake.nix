@@ -50,6 +50,9 @@
                 then "export CC=clang"
                 else ""
               }
+
+              source dev_aliases.sh
+              debug
             '';
           };
         };
