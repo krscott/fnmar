@@ -1,5 +1,6 @@
 #include "str.h"
 #include "xenum.h"
+#include "xstruct.h"
 
 #include <assert.h>
 #include <fnmatch.h>
@@ -75,20 +76,11 @@ done:
 xenum(token_kind, TOKEN_KINDS);
 static xenum_impl_to_cstr(token_kind, TOKEN_KINDS);
 
-struct token
-{
-    enum token_kind kind;
-    struct str str;
-};
-
-static void token_debug_print(struct token const token)
-{
-    printf(
-        "token { %s, `%.*s` }\n",
-        token_kind_to_cstr(token.kind),
-        str_format_args(token.str)
-    );
-}
+#define TOKEN_FIELDS(F)                                                        \
+    F(xf_enum, token_kind, kind)                                               \
+    F(xf_struct, str, str)
+xstruct(token, TOKEN_FIELDS);
+static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
 
 static enum token_kind get_delim_kind(char const c)
 {
@@ -319,7 +311,8 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             break;
         }
 
-        token_debug_print(parser->token);
+        token_fprint_repr(stdout, &parser->token);
+        fprintf(stdout, "\n");
 
         switch (parser->state)
         {

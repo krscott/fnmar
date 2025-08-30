@@ -4,67 +4,80 @@
 #include "prelude.h"
 #include <assert.h>
 
-#define XSTRUCT_DECL_FIELD(varname, type) type varname;
-#define XSTRUCT_DECL_STRUCT(varname, name) struct name varname;
-#define XSTRUCT_DECL_FIELD_ARRAY(varname, type, len) type varname[len];
-#define XSTRUCT_DECL_STRUCT_ARRAY(varname, name, len) struct name varname[len];
+#define XSTRUCT_FIELD_xf_simple(type, varname) type varname
+#define XSTRUCT_FIELD_xf_simple_array(type, varname, len) type varname[len]
+#define XSTRUCT_FIELD_xf_struct(type, varname) struct type varname
+#define XSTRUCT_FIELD_xf_struct_array(type, varname, len)                      \
+    struct type varname[len]
+#define XSTRUCT_FIELD_xf_enum(type, varname) enum type varname
+#define XSTRUCT_FIELD_xf_enum_array(type, varname, len) enum type varname[len]
+
+#define XSTRUCT_FIELD(fkind, ...) XSTRUCT_FIELD_##fkind(__VA_ARGS__);
 
 #define xstruct(name, FIELDS_X)                                                \
     struct name                                                                \
     {                                                                          \
-        FIELDS_X(                                                              \
-            XSTRUCT_DECL_FIELD,                                                \
-            XSTRUCT_DECL_STRUCT,                                               \
-            XSTRUCT_DECL_FIELD_ARRAY,                                          \
-            XSTRUCT_DECL_STRUCT_ARRAY                                          \
-        )                                                                      \
+        FIELDS_X(XSTRUCT_FIELD)                                                \
     }
 
-#define XSTRUCT_PRINT_F(varname, type)                                         \
+#define XSTRUCT_FPRINT_REPR_xf_simple(type, varname)                           \
     {                                                                          \
-        printf("." #varname " = ");                                            \
-        printf(BASIC_TYPE_FORMAT((x)->varname), (x)->varname);                 \
-        printf(", ");                                                          \
+        fprintf(stream, "." #varname " = ");                                   \
+        fprintf(stream, BASIC_TYPE_FORMAT((x)->varname), (x)->varname);        \
+        fprintf(stream, ", ");                                                 \
     }
 
-#define XSTRUCT_PRINT_S(varname, name)                                         \
+#define XSTRUCT_FPRINT_REPR_xf_simple_array(type, varname)                     \
     {                                                                          \
-        name##_print(&(x)->varname);                                           \
+        type##_fprint_repr(stream, &(x)->varname);                             \
     }
 
-#define XSTRUCT_PRINT_FA(varname, type, len)                                   \
+#define XSTRUCT_FPRINT_REPR_xf_struct(type, varname)                           \
     {                                                                          \
-        printf("." #varname " = { ");                                          \
+        fprintf(stream, "." #varname " = ");                                   \
+        type##_fprint_repr(stream, &(x)->varname);                             \
+        fprintf(stream, ", ");                                                 \
+    }
+
+#define XSTRUCT_FPRINT_REPR_xf_struct_array(type, varname, len)                \
+    {                                                                          \
+        fprintf(stream, "." #varname " = { ");                                 \
         for (u32 i = 0; i < len; ++i)                                          \
         {                                                                      \
-            printf(BASIC_TYPE_FORMAT((x)->varname[i]), (x)->varname[i]);       \
-            printf(", ");                                                      \
+            type##_fprint_repr(stream, &(x)->varname[i]);                      \
+            fprintf(stream, ", ");                                             \
         }                                                                      \
-        printf("}");                                                           \
+        fprintf(stream, "}");                                                  \
     }
 
-#define XSTRUCT_PRINT_SA(varname, name, len)                                   \
+#define XSTRUCT_FPRINT_REPR_xf_enum(type, varname)                             \
     {                                                                          \
-        printf("." #varname " = { ");                                          \
+        fprintf(stream, "." #varname " = ");                                   \
+        fprintf(stream, "%s", type##_to_cstr((x)->varname));                   \
+        fprintf(stream, ", ");                                                 \
+    }
+
+#define XSTRUCT_FPRINT_REPR_xf_enum_array(type, varname, len)                  \
+    {                                                                          \
+        fprintf(stream, "." #varname " = { ");                                 \
         for (u32 i = 0; i < len; ++i)                                          \
         {                                                                      \
-            name##_print(&(x)->varname[i]);                                    \
+            fprintf(stream, "%s, ", type##_to_cstr((x)->varname[i]));          \
         }                                                                      \
-        printf("}");                                                           \
+        fprintf(stream, "}");                                                  \
     }
 
-#define xstruct_decl_print(name) void name##_print(struct name const *const x)
-#define xstruct_impl_print(name, FIELDS_X)                                     \
-    xstruct_decl_print(name)                                                   \
+#define XSTRUCT_FPRINT_REPR(fkind, ...)                                        \
+    XSTRUCT_FPRINT_REPR_##fkind(__VA_ARGS__);
+
+#define xstruct_decl_fprint_repr(name)                                         \
+    void name##_fprint_repr(FILE *stream, struct name const *x)
+#define xstruct_impl_fprint_repr(name, FIELDS_X)                               \
+    xstruct_decl_fprint_repr(name)                                             \
     {                                                                          \
-        printf("(struct " #name "){ ");                                        \
-        FIELDS_X(                                                              \
-            XSTRUCT_PRINT_F,                                                   \
-            XSTRUCT_PRINT_S,                                                   \
-            XSTRUCT_PRINT_FA,                                                  \
-            XSTRUCT_PRINT_SA                                                   \
-        )                                                                      \
-        printf("}");                                                           \
+        fprintf(stream, "(struct " #name "){ ");                               \
+        FIELDS_X(XSTRUCT_FPRINT_REPR)                                          \
+        fprintf(stream, "}");                                                  \
     }                                                                          \
     static_assert(1, "")
 

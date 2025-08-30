@@ -109,6 +109,11 @@ char const *str_into_cstr_unsafe(struct str const s, char *const removed_char)
     return s.ptr;
 }
 
+int str_fprint_repr(FILE *const stream, struct str const *const s)
+{
+    return fprintf(stream, "str(\"%.*s\")", str_format_args(*s));
+}
+
 //
 // cstrbuf
 //

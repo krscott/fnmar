@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 struct str
@@ -23,6 +24,7 @@ struct str str_trim_left_char(struct str s, char c);
 struct str str_trim_left_whitespace(struct str s);
 struct str str_trim_right_whitespace(struct str s);
 struct str str_trim_whitespace(struct str s);
+int str_fprint_repr(FILE *stream, struct str const *s);
 
 // UNSAFE: Writes to `s.ptr[s.len]`
 char const *str_into_cstr_unsafe(struct str s, char *removed_char);
@@ -42,5 +44,6 @@ struct str cstrbuf_to_str(struct cstrbuf b);
 bool cstrbuf_extend_cstrn(struct cstrbuf *b, char const *cstr, size_t n);
 bool cstrbuf_extend_cstr(struct cstrbuf *b, char const *cstr);
 bool cstrbuf_extend_str(struct cstrbuf *b, struct str s);
+void cstrbuf_debug_print(struct cstrbuf const b);
 
 #endif
