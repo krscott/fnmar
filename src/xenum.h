@@ -1,6 +1,8 @@
 #ifndef XENUM_H_
 #define XENUM_H_
 
+#include <assert.h>
+
 #define X_ENUM_VAR(x) x,
 
 #define xenum(name, KINDS_X)                                                   \
