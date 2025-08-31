@@ -24,3 +24,15 @@ debug() {
 release() {
     unset CMAKE_BUILD_TYPE
 }
+
+logdebug() {
+    export LOG=debug
+}
+
+loginfo() {
+    export LOG=info
+}
+
+logwarn() {
+    export LOG=warn
+}
