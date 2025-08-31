@@ -23,6 +23,7 @@
         {                                                                      \
             KINDS_X(X_CASE_TO_CSTR)                                            \
         default:                                                               \
+            assert(false && "Invalid enum " #name " value");                   \
             return "?";                                                        \
         }                                                                      \
     }                                                                          \
