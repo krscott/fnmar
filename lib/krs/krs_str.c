@@ -7,6 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct str str(char *const cstr)
+{
+    return (struct str){
+        .ptr = cstr,
+        .len = strlen(cstr),
+    };
+}
+
 bool str_split_at_delims(
     struct str const s,
     char const *const delims,

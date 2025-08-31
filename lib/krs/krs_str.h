@@ -14,6 +14,8 @@ struct str
 
 #define str_format_args(s) ((int)(s).len), ((s).ptr)
 
+struct str str(char *cstr);
+
 bool str_split_at_delims(
     struct str s, char const *delims, struct str *head, struct str *tail
 );
