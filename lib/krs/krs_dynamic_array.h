@@ -1,17 +1,19 @@
 #ifndef KRS_DYNAMIC_ARRAY_H_
 #define KRS_DYNAMIC_ARRAY_H_
 
+#include "krs_cc_ext.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-void *da_at_unchecked_(void *const *restrict ptr, size_t elem_size, size_t i);
+nodiscard void *
+da_at_unchecked_(void *const *restrict ptr, size_t elem_size, size_t i);
 #define da_at_unchecked(arr)                                                   \
     da_at_unchecked_((void *const *)&(arr)->ptr, sizeof(*(arr)->ptr), i)
 
-bool da_at_(
+nodiscard bool da_at_(
     void *const *restrict ptr,
     size_t *restrict len,
     size_t elem_size,
@@ -21,7 +23,7 @@ bool da_at_(
 #define da_at(arr, out)                                                        \
     da_at_((void *const *)&(arr)->ptr, &(arr)->len, sizeof(*(arr)->ptr), i, out)
 
-bool da_reserve_(
+nodiscard bool da_reserve_(
     void **restrict const ptr,
     size_t *restrict const len,
     size_t *restrict const cap,
@@ -37,7 +39,7 @@ bool da_reserve_(
         n                                                                      \
     )
 
-bool da_extend_uninit_(
+nodiscard bool da_extend_uninit_(
     void **restrict const ptr,
     size_t *restrict const len,
     size_t *restrict const cap,
@@ -55,7 +57,7 @@ bool da_extend_uninit_(
         (void **)out_ptr                                                       \
     )
 
-bool da_extend_(
+nodiscard bool da_extend_(
     void **ptr,
     size_t *restrict len,
     size_t *restrict cap,
