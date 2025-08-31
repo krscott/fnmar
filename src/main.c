@@ -311,7 +311,7 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
 
         fprintf(
             stderr,
-            "%-18s %-12s %.*s\n",
+            "%-19s %-15s %.*s\n",
             parser_state_to_cstr(parser->state),
             token_kind_to_cstr(parser->token.kind),
             str_format_args(parser->token.str)
@@ -454,7 +454,25 @@ int main(int const argc, char const *const *const argv)
             char const *pattern = str_into_cstr_unsafe(parser.token.str, &c);
 
             found_match = 0 == fnmatch(pattern, filename, 0);
-            fprintf(stderr, "Check pattern '%s': %u\n", pattern, found_match);
+
+            if (found_match)
+            {
+                fprintf(
+                    stderr,
+                    "'%s' matched pattern '%s'\n",
+                    filename,
+                    pattern
+                );
+            }
+            else
+            {
+                fprintf(
+                    stderr,
+                    "'%s' did not match pattern '%s'\n",
+                    filename,
+                    pattern
+                );
+            }
 
             str_revert_into_cstr_unsafe(parser.token.str, c);
         }
