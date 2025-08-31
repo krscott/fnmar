@@ -7,7 +7,6 @@
 #include <fnmatch.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,7 +42,7 @@ static enum error cstrbuf_init_from_file( //
     char *buf = malloc(len + 1);
     if (!buf)
     {
-        fprintf(stderr, "Out of memory\n");
+        logf(LL_FATAL, "Out of memory");
         err = ERR_OUT_OF_MEMORY;
         goto done;
     }
@@ -310,9 +309,9 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             break;
         }
 
-        fprintf(
-            stderr,
-            "%-19s %-15s %.*s\n",
+        logf(
+            LL_DEBUG,
+            "%-19s %-15s %.*s",
             parser_state_to_cstr(parser->state),
             token_kind_to_cstr(parser->token.kind),
             str_format_args(parser->token.str)
@@ -403,15 +402,15 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
     {
         if (parser->token.kind == TOK_EOF)
         {
-            fprintf(stderr, "Unexpected end of file\n");
+            logf(LL_ERROR, "Unexpected end of file");
         }
         else
         {
             struct file_pos pos =
                 find_file_pos(parser->full_text, parser->tail.ptr);
-            fprintf(
-                stderr,
-                "Unexpected token at line %lu col %lu: '%.*s'\n",
+            logf(
+                LL_ERROR,
+                "Unexpected token at line %lu col %lu: '%.*s'",
                 pos.line + 1,
                 pos.column + 1,
                 str_format_args(parser->token.str)
@@ -423,11 +422,6 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
 int main(int const argc, char const *const *const argv)
 {
     log_setup_from_env();
-    logf(LL_FATAL, "fatal");
-    logf(LL_ERROR, "error");
-    logf(LL_WARN, "warn");
-    logf(LL_INFO, "info");
-    logf(LL_DEBUG, "debug");
 
     enum error err = OK;
     struct cstrbuf config_str = {0};
@@ -465,18 +459,13 @@ int main(int const argc, char const *const *const argv)
 
             if (found_match)
             {
-                fprintf(
-                    stderr,
-                    "'%s' matched pattern '%s'\n",
-                    filename,
-                    pattern
-                );
+                logf(LL_DEBUG, "'%s' matched pattern '%s'", filename, pattern);
             }
             else
             {
-                fprintf(
-                    stderr,
-                    "'%s' did not match pattern '%s'\n",
+                logf(
+                    LL_DEBUG,
+                    "'%s' did not match pattern '%s'",
                     filename,
                     pattern
                 );
@@ -508,12 +497,12 @@ int main(int const argc, char const *const *const argv)
                 }
             } while (is_split);
 
-            fprintf(stderr, "Running: %s\n", cmd.ptr);
+            logf(LL_INFO, "Running: %s", cmd.ptr);
             int exitcode = system(cmd.ptr);
 
             if (exitcode != 0)
             {
-                fprintf(stderr, "Command non-zero exit code: %d\n", exitcode);
+                logf(LL_WARN, "Command non-zero exit code: %d", exitcode);
             }
 
             cstrbuf_deinit(&cmd);
@@ -521,7 +510,7 @@ int main(int const argc, char const *const *const argv)
         }
     }
 
-    fprintf(stderr, "Did not find pattern match for '%s'\n", filename);
+    logf(LL_WARN, "Did not find pattern match for '%s'", filename);
 
 done:
     cstrbuf_deinit(&config_str);

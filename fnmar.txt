@@ -14,4 +14,4 @@
     : clang-format -i %
 
 # Can use '%' multiple times
-* : echo "Error: Did not format '%' - No rule for '%' file ext"
+# * : echo "Error: Did not format '%' - No rule for '%' file ext"
