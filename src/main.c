@@ -13,6 +13,7 @@
 enum error
 {
     OK = 0,
+    ERR_NO_MATCHES,
     ERR_FILESYSTEM,
     ERR_ARGS,
     ERR_OUT_OF_MEMORY,
@@ -419,6 +420,48 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
     }
 }
 
+static enum error format_and_run( //
+    struct str const cmd_pattern,
+    char const *const filename
+)
+{
+    enum error err = OK;
+
+    // Format: Replace "%" with filename
+
+    struct cstrbuf cmd = {0};
+
+    struct str head = {0};
+    struct str tail = cmd_pattern;
+
+    bool is_split;
+
+    do
+    {
+        is_split = str_split_delims(tail, "%", &head, &tail);
+
+        cstrbuf_extend_str(&cmd, head);
+
+        if (is_split)
+        {
+            cstrbuf_extend_cstr(&cmd, filename);
+        }
+    } while (is_split);
+
+    // Run
+
+    logf(LL_INFO, "Running: %s", cmd.ptr);
+    int exitcode = system(cmd.ptr);
+
+    if (exitcode != 0)
+    {
+        logf(LL_WARN, "Command non-zero exit code: %d", exitcode);
+    }
+
+    cstrbuf_deinit(&cmd);
+    return err;
+}
+
 static enum error evaluate(char const *const filename)
 {
     struct cstrbuf config_str = {0};
@@ -464,41 +507,13 @@ static enum error evaluate(char const *const filename)
 
         if (found_match && parser.token.kind == TOK_CMD)
         {
-            // Replace "%" with filename
-
-            struct cstrbuf cmd = {0};
-
-            struct str head = {0};
-            struct str tail = parser.token.str;
-
-            bool is_split;
-
-            do
-            {
-                is_split = str_split_delims(tail, "%", &head, &tail);
-
-                cstrbuf_extend_str(&cmd, head);
-
-                if (is_split)
-                {
-                    cstrbuf_extend_cstr(&cmd, filename);
-                }
-            } while (is_split);
-
-            logf(LL_INFO, "Running: %s", cmd.ptr);
-            int exitcode = system(cmd.ptr);
-
-            if (exitcode != 0)
-            {
-                logf(LL_WARN, "Command non-zero exit code: %d", exitcode);
-            }
-
-            cstrbuf_deinit(&cmd);
+            err = format_and_run(parser.token.str, filename);
             goto done;
         }
     }
 
     logf(LL_WARN, "Did not find pattern match for '%s'", filename);
+    err = ERR_NO_MATCHES;
 
 done:
     cstrbuf_deinit(&config_str);

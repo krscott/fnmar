@@ -157,7 +157,7 @@ bool cstrbuf_extend_cstrn(
 {
     char *extension;
 
-    size_t old_len = b->len;
+    size_t const old_len = b->len;
     bool const success = da_extend_uninit(b, n + 1, &extension);
 
     if (success)
@@ -171,6 +171,8 @@ bool cstrbuf_extend_cstrn(
 
         b->len = old_len + i;
     }
+
+    assert(b->ptr[b->len] == '\0');
 
     return success;
 }
