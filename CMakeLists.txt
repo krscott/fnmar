@@ -23,6 +23,11 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+add_compile_options(
+    -Werror=unused-result
+    -Werror=return-type
+)
+
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -33,7 +38,7 @@ else()
     message("Release build")
     set(CMAKE_UNITY_BUILD ON)
 
-    add_compile_options(-Werror -Os)
+    add_compile_options(-Os)
 endif()
 
 add_subdirectory(lib/krs)

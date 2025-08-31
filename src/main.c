@@ -19,6 +19,12 @@ enum error
     ERR_OUT_OF_MEMORY,
 };
 
+static enum error out_of_memory(void)
+{
+    logf(LL_FATAL, "Out of memory");
+    return ERR_OUT_OF_MEMORY;
+}
+
 static char const *const DEFAULT_CONFIG_FILENAME = "fnmar.txt";
 
 static enum error cstrbuf_init_from_file( //
@@ -43,8 +49,7 @@ static enum error cstrbuf_init_from_file( //
     char *buf = malloc(len + 1);
     if (!buf)
     {
-        logf(LL_FATAL, "Out of memory");
-        err = ERR_OUT_OF_MEMORY;
+        err = out_of_memory();
         goto done;
     }
 
@@ -440,11 +445,19 @@ static enum error format_and_run( //
     {
         is_split = str_split_delims(tail, "%", &head, &tail);
 
-        cstrbuf_extend_str(&cmd, head);
+        if (!cstrbuf_extend_str(&cmd, head))
+        {
+            err = out_of_memory();
+            goto done;
+        }
 
         if (is_split)
         {
-            cstrbuf_extend_cstr(&cmd, filename);
+            if (!cstrbuf_extend_cstr(&cmd, filename))
+            {
+                err = out_of_memory();
+                goto done;
+            }
         }
     } while (is_split);
 
@@ -458,6 +471,7 @@ static enum error format_and_run( //
         logf(LL_WARN, "Command non-zero exit code: %d", exitcode);
     }
 
+done:
     cstrbuf_deinit(&cmd);
     return err;
 }
