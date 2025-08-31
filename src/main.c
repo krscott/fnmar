@@ -419,23 +419,11 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
     }
 }
 
-int main(int const argc, char const *const *const argv)
+static enum error evaluate(char const *const filename)
 {
-    log_setup_from_env();
-
-    enum error err = OK;
     struct cstrbuf config_str = {0};
-
-    if (argc != 2)
-    {
-        printf("Usage: %s file\n", argv[0]);
-        err = ERR_ARGS;
-        goto done;
-    }
-
-    char const *const filename = argv[1];
-
-    err = cstrbuf_init_from_file(&config_str, DEFAULT_CONFIG_FILENAME);
+    enum error err =
+        cstrbuf_init_from_file(&config_str, DEFAULT_CONFIG_FILENAME);
     if (err)
     {
         goto done;
@@ -514,5 +502,25 @@ int main(int const argc, char const *const *const argv)
 
 done:
     cstrbuf_deinit(&config_str);
+    return err;
+}
+
+int main(int const argc, char const *const *const argv)
+{
+    log_setup_from_env();
+
+    enum error err = OK;
+
+    if (argc != 2)
+    {
+        printf("Usage: %s file\n", argv[0]);
+        err = ERR_ARGS;
+        goto done;
+    }
+
+    char const *const filename = argv[1];
+    err = evaluate(filename);
+
+done:
     return (int)err;
 }
