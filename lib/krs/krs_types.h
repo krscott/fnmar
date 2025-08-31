@@ -2,6 +2,7 @@
 #define KRS_TYPES_H_
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef uint8_t u8;
@@ -27,6 +28,7 @@ typedef double f64;
 #define BASIC_TYPE_FORMAT(x)                                                   \
     (_Generic(                                                                 \
         (x),                                                                   \
+         bool: "%d",                                                           \
          short: "%hd",                                                         \
          unsigned short: "%hu",                                                \
          int: "%d",                                                            \
