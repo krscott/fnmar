@@ -5,3 +5,6 @@ target_link_libraries(${PROJECT_NAME} krslib)
 #     file.c
 # )
 
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} shlwapi)
+endif()

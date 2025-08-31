@@ -127,7 +127,7 @@ int str_fprint_repr(FILE *const stream, struct str const *const s)
 
 void cstrbuf_debug_print(struct cstrbuf const b)
 {
-    printf("%lu %lu '%s'\n", b.len, b.cap, b.ptr);
+    printf("%lu %lu '%s'\n", (unsigned long)b.len, (unsigned long)b.cap, b.ptr);
 }
 
 void cstrbuf_deinit(struct cstrbuf *const b)

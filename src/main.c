@@ -1,13 +1,26 @@
 #include "krs_log.h"
 #include "krs_str.h"
+#include "krs_types.h"
 #include "krs_x.h"
 
 #include <assert.h>
-#include <fnmatch.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <shlwapi.h>
+
+static int fnmatch(char const *pattern, char const *string, int flags)
+{
+    (void)flags;
+    return PathMatchSpecA(string, pattern) ? 0 : 1;
+}
+
+#else
+#include <fnmatch.h>
+#endif
 
 enum error
 {
@@ -228,9 +241,9 @@ static struct token parse_command(struct str input, struct str *const tail)
 struct file_pos
 {
     // Zero-indexed line number
-    size_t line;
+    u32 line;
     // Zero-indexed column number
-    size_t column;
+    u32 column;
 };
 
 static struct file_pos find_file_pos( //
@@ -415,7 +428,7 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
                 find_file_pos(parser->full_text, parser->tail.ptr);
             logf(
                 LL_ERROR,
-                "Unexpected token at line %lu col %lu: '%.*s'",
+                "Unexpected token at line %u col %u: '%.*s'",
                 pos.line + 1,
                 pos.column + 1,
                 str_format_args(parser->token.str)

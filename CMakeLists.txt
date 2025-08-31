@@ -1,4 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
+
+if("$ENV{CC}" MATCHES ".*mingw32.*")
+    # Required for Nix pkgCross
+    message("Detected mingw32")
+    set(WIN32 ON CACHE BOOL "Set WIN32 for all CMake files")
+    set(UNIX OFF CACHE BOOL "Unset UNIX for all CMake files")
+endif()
+
 project(
     fnmar
     LANGUAGES C
@@ -45,5 +53,9 @@ endif()
 add_subdirectory(lib/krs)
 add_subdirectory(src)
 
-install(TARGETS ${PROJECT_NAME})
+if (WIN32)
+    install(TARGETS ${PROJECT_NAME})
+else()
+    install(TARGETS ${PROJECT_NAME})
+endif()
 

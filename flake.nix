@@ -31,6 +31,11 @@
               then pkgs.clangStdenv
               else pkgs.stdenv;
           };
+
+          fnmar-win = finalDrv.override {
+            inherit (pkgs.pkgsCross.mingwW64) stdenv;
+          };
+
           default = finalDrv;
         };
 
