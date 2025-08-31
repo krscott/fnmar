@@ -1,7 +1,6 @@
 #include "krs_log.h"
 #include "krs_str.h"
-#include "krs_xenum.h"
-#include "krs_xstruct.h"
+#include "krs_x.h"
 
 #include <assert.h>
 #include <fnmatch.h>
@@ -79,13 +78,13 @@ done:
     X(TOK_COLON)                                                               \
     X(TOK_CMD)                                                                 \
     X(TOK_EOF)
-xenum(token_kind, TOKEN_KINDS);
-static xenum_impl_to_cstr(token_kind, TOKEN_KINDS);
+x_enum(token_kind, TOKEN_KINDS);
+static x_enum_to_cstr_impl(token_kind, TOKEN_KINDS);
 
 #define TOKEN_FIELDS(F)                                                        \
     F(xf_enum, token_kind, kind)                                               \
     F(xf_struct, str, str)
-xstruct(token, TOKEN_FIELDS);
+x_struct(token, TOKEN_FIELDS);
 // static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
 
 static enum token_kind get_delim_kind(char const c)
@@ -268,8 +267,8 @@ static struct file_pos find_file_pos( //
     X(PS_PATTERN)                                                              \
     X(PS_PATTERN_DELIM)                                                        \
     X(PS_COMMAND)
-xenum(parser_state, PARSER_STATES);
-static xenum_impl_to_cstr(parser_state, PARSER_STATES);
+x_enum(parser_state, PARSER_STATES);
+static x_enum_to_cstr_impl(parser_state, PARSER_STATES);
 
 struct fnmar_parser
 {
