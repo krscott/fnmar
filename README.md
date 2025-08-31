@@ -18,4 +18,10 @@ nix develop
 Add useful development shell aliases
 ```
 source dev_aliases.sh
+
+# Reconfigure cmake
+cfg
+
+# Build and run
+run
 ```

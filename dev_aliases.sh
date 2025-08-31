@@ -1,20 +1,36 @@
 cfg() {
-    rm -rf build/
-    cmake -B build
+    (
+        set -eu
+
+        rm -rf build/
+        cmake -B build
+    )
 }
 
 bld() {
-    cmake --build build
+    (
+        set -eu
 
-    if [ -f build/compile_commands.json ]; then
-        mkdir -p .compile-db
-        cp build/compile_commands.json .compile-db
-    fi
+        if [ ! -d build ]; then
+            cfg
+        fi
+
+        cmake --build build
+
+        if [ -f build/compile_commands.json ]; then
+            mkdir -p .compile-db
+            cp build/compile_commands.json .compile-db
+        fi
+    )
 }
 
 run() {
-    bld
-    ./build/src/fnmar "$@"
+    (
+        set -eu
+
+        bld
+        ./build/src/fnmar "$@"
+    )
 }
 
 debug() {
