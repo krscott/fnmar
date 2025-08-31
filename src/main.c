@@ -42,7 +42,7 @@ static enum error cstrbuf_init_from_file( //
     char *buf = malloc(len + 1);
     if (!buf)
     {
-        printf("Out of memory\n");
+        fprintf(stderr, "Out of memory\n");
         err = ERR_OUT_OF_MEMORY;
         goto done;
     }
@@ -80,7 +80,7 @@ static xenum_impl_to_cstr(token_kind, TOKEN_KINDS);
     F(xf_enum, token_kind, kind)                                               \
     F(xf_struct, str, str)
 xstruct(token, TOKEN_FIELDS);
-static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
+// static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
 
 static enum token_kind get_delim_kind(char const c)
 {
@@ -290,8 +290,6 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
 {
     if (!parser->is_done)
     {
-        printf("%-18s ", parser_state_to_cstr(parser->state));
-
         switch (parser->state)
         {
         case PS_LINE_START:
@@ -311,8 +309,13 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             break;
         }
 
-        token_fprint_repr(stdout, &parser->token);
-        fprintf(stdout, "\n");
+        fprintf(
+            stderr,
+            "%-18s %-12s %.*s\n",
+            parser_state_to_cstr(parser->state),
+            token_kind_to_cstr(parser->token.kind),
+            str_format_args(parser->token.str)
+        );
 
         switch (parser->state)
         {
@@ -339,7 +342,6 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             switch (parser->token.kind)
             {
             case TOK_PATTERN:
-                // TODO
                 parser->state = PS_PATTERN_DELIM;
                 break;
             case TOK_COMMENT:
@@ -378,7 +380,6 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             switch (parser->token.kind)
             {
             case TOK_CMD:
-                // TODO
                 parser->state = PS_LINE_START;
                 break;
             case TOK_NONE:
@@ -401,13 +402,14 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
     {
         if (parser->token.kind == TOK_EOF)
         {
-            printf("Unexpected end of file\n");
+            fprintf(stderr, "Unexpected end of file\n");
         }
         else
         {
             struct file_pos pos =
                 find_file_pos(parser->full_text, parser->tail.ptr);
-            printf(
+            fprintf(
+                stderr,
                 "Unexpected token at line %lu col %lu: '%.*s'\n",
                 pos.line + 1,
                 pos.column + 1,
@@ -452,7 +454,7 @@ int main(int const argc, char const *const *const argv)
             char const *pattern = str_into_cstr_unsafe(parser.token.str, &c);
 
             found_match = 0 == fnmatch(pattern, filename, 0);
-            printf("Check pattern '%s': %u\n", pattern, found_match);
+            fprintf(stderr, "Check pattern '%s': %u\n", pattern, found_match);
 
             str_revert_into_cstr_unsafe(parser.token.str, c);
         }
@@ -480,12 +482,12 @@ int main(int const argc, char const *const *const argv)
                 }
             } while (is_split);
 
-            printf("Running: %s\n", cmd.ptr);
+            fprintf(stderr, "Running: %s\n", cmd.ptr);
             int exitcode = system(cmd.ptr);
 
             if (exitcode != 0)
             {
-                printf("Command non-zero exit code: %d\n", exitcode);
+                fprintf(stderr, "Command non-zero exit code: %d\n", exitcode);
             }
 
             cstrbuf_deinit(&cmd);
@@ -493,7 +495,7 @@ int main(int const argc, char const *const *const argv)
         }
     }
 
-    printf("Did not find pattern match for '%s'\n", filename);
+    fprintf(stderr, "Did not find pattern match for '%s'\n", filename);
 
 done:
     cstrbuf_deinit(&config_str);
