@@ -1,3 +1,4 @@
+#include "krs_log.h"
 #include "krs_str.h"
 #include "krs_xenum.h"
 #include "krs_xstruct.h"
@@ -421,6 +422,13 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
 
 int main(int const argc, char const *const *const argv)
 {
+    log_setup_from_env();
+    logf(LL_FATAL, "fatal");
+    logf(LL_ERROR, "error");
+    logf(LL_WARN, "warn");
+    logf(LL_INFO, "info");
+    logf(LL_DEBUG, "debug");
+
     enum error err = OK;
     struct cstrbuf config_str = {0};
 
