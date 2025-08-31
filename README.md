@@ -29,5 +29,5 @@ run
 ## Design Philosophy
 
 Although this project is intended to produce a finished product that I will
-actually use in my dev setup, I'm also using it as a platform to experiment
-with my personal `krs` C library. As such, it may be a bit over-engineered.
+actually use in my dev setup, I'm also using it as a platform to test out my
+experimental xmacro-based `krs` C library.
