@@ -295,7 +295,12 @@ static nodiscard bool parse_args( //
         {
             struct cliopt_meta *meta;
 
-            struct sv long_arg = sv_from_cstr(arg);
+            struct sv const arg_str = sv_from_cstr(arg);
+
+            struct sv long_arg;
+            struct sv tail;
+            bool const using_equals =
+                sv_split_delims(arg_str, "=", &long_arg, &tail);
 
             if (get_long(opts, long_arg, &meta))
             {
@@ -319,7 +324,7 @@ static nodiscard bool parse_args( //
                             goto done;
                         }
                     }
-                    else if (*arg == '=')
+                    else if (using_equals)
                     {
                         // equals arg e.g. `-a=123`
                         ++arg;
