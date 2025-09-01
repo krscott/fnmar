@@ -552,6 +552,17 @@ done:
     return err;
 }
 
+static void print_usage(void) { printf("Usage: fnmar [options] file\n"); }
+
+static void print_help(void)
+{
+    print_usage();
+    printf("\n");
+    printf("Options:\n");
+    printf("  -h, --help          Show help\n");
+    printf("  -c, --config FILE   Use config file\n");
+}
+
 int main(int const argc, char const *const *const argv)
 {
     enum error err = OK;
@@ -568,13 +579,14 @@ int main(int const argc, char const *const *const argv)
                 (struct cliopt_option){
                     .name = "filename",
                     .kind = CLIOPT_STRING,
+                    .required = true,
                 },
             .output = &filename,
         },
         (struct cliopt_meta){
             .spec =
                 (struct cliopt_option){
-                    .name = "config",
+                    .name = "--config",
                     .short_name = 'c',
                     .kind = CLIOPT_STRING,
                 },
@@ -583,9 +595,10 @@ int main(int const argc, char const *const *const argv)
         (struct cliopt_meta){
             .spec =
                 (struct cliopt_option){
-                    .name = "help",
+                    .name = "--help",
                     .short_name = 'h',
                     .kind = CLIOPT_BOOL,
+                    .sufficient = true,
                 },
             .output = &help_flag,
         },
@@ -598,8 +611,14 @@ int main(int const argc, char const *const *const argv)
 
     if (!cliopt_parse_args(opts, argc, argv))
     {
-        printf("Usage: %s file\n", argv[0]);
+        print_usage();
         err = ERR_ARGS;
+        goto done;
+    }
+
+    if (help_flag)
+    {
+        print_help();
         goto done;
     }
 

@@ -30,9 +30,15 @@ static nodiscard bool expects_arg(struct cliopt_option const *opt)
     return out;
 }
 
-static nodiscard bool is_positional(struct cliopt_option const *opt)
+static nodiscard bool is_positional_arg(struct cliopt_option const *const opt)
 {
     return opt->name && (opt->name[0] != '-') && (opt->short_name == '\0');
+}
+
+static nodiscard bool is_long_arg(struct cliopt_option const *const opt)
+{
+    return opt->name && (opt->name[0] == '-') && (opt->name[1] == '-') &&
+           (opt->name[2] != '\0');
 }
 
 static nodiscard bool parse_arg_value( //
@@ -40,6 +46,7 @@ static nodiscard bool parse_arg_value( //
     char const *const arg
 )
 {
+    assert(arg);
     assert(!meta->used);
 
     bool success;
@@ -104,7 +111,7 @@ static bool nodiscard get_next_positional( //
     for (u32 i = 0; i < opts.len; ++i)
     {
         struct cliopt_meta *const meta = &opts.ptr[i];
-        if (!meta->used && is_positional(&meta->spec))
+        if (!meta->used && is_positional_arg(&meta->spec))
         {
             *out = meta;
             success = true;
@@ -158,11 +165,12 @@ static bool get_long( //
     for (u32 i = 0; i < opts.len; ++i)
     {
         struct cliopt_meta *const meta = &opts.ptr[i];
-        if (strncmp(meta->spec.name, long_name.ptr, long_name.len) == 0)
+        if (is_long_arg(&meta->spec) &&
+            strncmp(meta->spec.name, long_name.ptr, long_name.len) == 0)
         {
             *out = meta;
             success = true;
-            cliopt_devf("Got long arg '--%s'", meta->spec.name);
+            cliopt_devf("Got long arg '%s'", meta->spec.name);
             break;
         }
     }
@@ -171,7 +179,7 @@ static bool get_long( //
     {
         logf(
             LL_FATAL,
-            "Unrecognized option '--%.*s'",
+            "Unrecognized option '%.*s'",
             str_format_args(long_name)
         );
     }
@@ -187,25 +195,48 @@ bool cliopt_parse_args( //
     cliopt_devf("skipping arg 0: %s", argv[0]);
     cliopt_devf("parsing %d args", argc - 1);
 
+#ifndef NDEBUG
+    for (size_t i = 0; i < opts.len; ++i)
+    {
+        struct cliopt_meta const *const meta = &opts.ptr[i];
+
+        if (meta->spec.name && meta->spec.short_name != '\0')
+        {
+            // If an arg has a short flag, it must not use a positional name
+            if (!is_long_arg(&meta->spec))
+            {
+                logf(
+                    LL_FATAL,
+                    "Short option '-%c' with positional name '%s' (change to "
+                    "'--%s')",
+                    meta->spec.short_name,
+                    meta->spec.name,
+                    meta->spec.name
+                );
+                assert(false);
+            }
+        }
+    }
+#endif
+
     bool success = true;
     bool positional_only = false;
 
-    int i = 1;
-    while (success && i < argc)
+    for (int i = 1; success && i < argc;)
     {
         char const *const full_arg = argv[i++];
-        char const *arg = full_arg;
 
-        cliopt_devf("arg: %s", arg);
+        cliopt_devf("arg: %s", full_arg);
 
-        if (positional_only || *arg != '-')
+        if (positional_only || full_arg[0] != '-')
         {
             // positional arg
+            cliopt_devf("positional");
 
             struct cliopt_meta *meta;
             if (get_next_positional(opts, &meta))
             {
-                success = parse_arg_value(meta, arg);
+                success = parse_arg_value(meta, full_arg);
             }
             else
             {
@@ -213,9 +244,12 @@ bool cliopt_parse_args( //
             }
             cliopt_devf("positional success=%d", success);
         }
-        else if (*(++arg) != '-')
+        else if (full_arg[1] != '-')
         {
             // short arg
+            cliopt_devf("short");
+
+            char const *arg = &full_arg[1];
 
             while (success && *arg != '\0')
             {
@@ -256,6 +290,10 @@ bool cliopt_parse_args( //
                         success = success && parse_arg_value(meta, arg);
                         break;
                     }
+                    else
+                    {
+                        success = parse_arg_value(meta, "");
+                    }
                 }
                 else
                 {
@@ -275,17 +313,14 @@ bool cliopt_parse_args( //
         else
         {
             // long arg
-
-            ++arg;
+            cliopt_devf("long");
 
             struct cliopt_meta *meta;
-
-            struct sv const arg_str = sv_from_cstr(arg);
 
             struct sv long_arg;
             struct sv tail;
             bool const using_equals =
-                sv_split_delims(arg_str, "=", &long_arg, &tail);
+                sv_split_delims(sv_from_cstr(full_arg), "=", &long_arg, &tail);
 
             if (get_long(opts, long_arg, &meta))
             {
@@ -297,14 +332,14 @@ bool cliopt_parse_args( //
 
                         // NOTE: This is sound because tail was split from cstr
                         assert(tail.ptr[tail.len] == '\0');
-                        arg = tail.ptr;
+                        success = parse_arg_value(meta, tail.ptr);
                     }
                     else
                     {
                         // separate arg e.g. `--arg 123`
                         if (i < argc)
                         {
-                            arg = argv[i++];
+                            success = parse_arg_value(meta, argv[i++]);
                         }
                         else
                         {
@@ -316,8 +351,10 @@ bool cliopt_parse_args( //
                             success = false;
                         }
                     }
-
-                    success = success && parse_arg_value(meta, arg);
+                }
+                else
+                {
+                    success = parse_arg_value(meta, "");
                 }
             }
             else
@@ -326,6 +363,44 @@ bool cliopt_parse_args( //
             }
 
             cliopt_devf("long success=%d", success);
+        }
+    }
+
+    {
+        // Missing argument check. Pass if either condition is true:
+        // - Any "sufficient" arg is used
+        // - Any "required" arg is not used
+
+        bool any_sufficient = false;
+
+        for (size_t i = 0; success && i < opts.len; ++i)
+        {
+            struct cliopt_meta const *const meta = &opts.ptr[i];
+
+            if (meta->spec.sufficient && meta->used)
+            {
+                cliopt_devf("provided opt index %u is sufficient", (unsigned)i);
+                any_sufficient = true;
+                break;
+            }
+        }
+
+        if (!any_sufficient)
+        {
+            for (size_t i = 0; success && i < opts.len; ++i)
+            {
+                struct cliopt_meta const *const meta = &opts.ptr[i];
+
+                if (meta->spec.required && !meta->used)
+                {
+                    logf(
+                        LL_FATAL,
+                        "Missing required argument '%s'",
+                        meta->spec.name
+                    );
+                    success = false;
+                }
+            }
         }
     }
 

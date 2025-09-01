@@ -9,6 +9,8 @@
 
 struct str str_from_cstr(char *const cstr)
 {
+    assert(cstr);
+
     return (struct str){
         .ptr = cstr,
         .len = strlen(cstr),
@@ -16,6 +18,8 @@ struct str str_from_cstr(char *const cstr)
 }
 struct sv sv_from_cstr(char const *const cstr)
 {
+    assert(cstr);
+
     return (struct sv){
         .ptr = cstr,
         .len = strlen(cstr),
@@ -162,6 +166,8 @@ bool cstrbuf_extend_cstrn(
     struct cstrbuf *const b, char const *cstr, size_t const n
 )
 {
+    assert(cstr);
+
     char *extension;
 
     size_t const old_len = b->len;
@@ -186,6 +192,7 @@ bool cstrbuf_extend_cstrn(
 
 bool cstrbuf_extend_cstr(struct cstrbuf *const b, char const *const cstr)
 {
+    assert(cstr);
     return cstrbuf_extend_cstrn(b, cstr, strlen(cstr));
 }
 

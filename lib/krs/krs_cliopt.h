@@ -17,7 +17,8 @@ struct cliopt_option
     char const *name;
     char short_name;
     enum cliopt_kind kind;
-    // bool required; // TODO
+    bool required;
+    bool sufficient;
 };
 
 struct cliopt_meta
