@@ -559,14 +559,13 @@ static void print_usage(void)
 
 static void print_help(void)
 {
+    char const *const d_config = DEFAULT_CONFIG_FILENAME;
+
     print_usage();
     printf("\n");
     printf("Options:\n");
     printf("  -h, --help          Show help\n");
-    printf(
-        "  -c, --config FILE   Use config file (default: %s)\n",
-        DEFAULT_CONFIG_FILENAME
-    );
+    printf("  -c, --config FILE   Use config file (default: %s)\n", d_config);
 }
 
 int main(int const argc, char const *const *const argv)

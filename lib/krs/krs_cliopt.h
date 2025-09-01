@@ -14,9 +14,9 @@ enum cliopt_kind
 
 struct cliopt_option
 {
+    enum cliopt_kind kind;
     char const *name;
     char short_name;
-    enum cliopt_kind kind;
     bool required;
     bool sufficient;
 };
