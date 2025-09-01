@@ -22,11 +22,11 @@ struct sv sv_from_cstr(char const *const cstr)
     };
 }
 
-bool str_split_at_delims(
-    struct str const s,
+bool sv_split_at_delims(
+    struct sv const s,
     char const *const delims,
-    struct str *const head,
-    struct str *const tail
+    struct sv *const head,
+    struct sv *const tail
 )
 {
     bool success = false;
@@ -35,11 +35,11 @@ bool str_split_at_delims(
     {
         if (strchr(delims, s.ptr[i]))
         {
-            *head = (struct str){
+            *head = (struct sv){
                 .ptr = s.ptr,
                 .len = i,
             };
-            *tail = (struct str){
+            *tail = (struct sv){
                 .ptr = &s.ptr[i],
                 .len = s.len - i,
             };
@@ -51,20 +51,20 @@ bool str_split_at_delims(
     }
 
     *head = s;
-    *tail = (struct str){0};
+    *tail = (struct sv){0};
 
 done:
     return success;
 }
 
-bool str_split_delims(
-    struct str const s,
+bool sv_split_delims(
+    struct sv const s,
     char const *const delims,
-    struct str *const head,
-    struct str *const tail
+    struct sv *const head,
+    struct sv *const tail
 )
 {
-    bool const is_split = str_split_at_delims(s, delims, head, tail);
+    bool const is_split = sv_split_at_delims(s, delims, head, tail);
 
     if (is_split)
     {
@@ -75,7 +75,7 @@ bool str_split_delims(
     return is_split;
 }
 
-struct str str_trim_left_char(struct str s, char const c)
+struct sv sv_trim_left_char(struct sv s, char const c)
 {
     while (s.len > 0 && *s.ptr == c)
     {
@@ -86,7 +86,7 @@ struct str str_trim_left_char(struct str s, char const c)
     return s;
 }
 
-struct str str_trim_left_whitespace(struct str s)
+struct sv sv_trim_left_whitespace(struct sv s)
 {
     while (s.len > 0 && isspace(*s.ptr))
     {
@@ -97,7 +97,7 @@ struct str str_trim_left_whitespace(struct str s)
     return s;
 }
 
-struct str str_trim_right_whitespace(struct str s)
+struct sv sv_trim_right_whitespace(struct sv s)
 {
     while (s.len > 0 && isspace(s.ptr[s.len - 1]))
     {
@@ -107,9 +107,9 @@ struct str str_trim_right_whitespace(struct str s)
     return s;
 }
 
-struct str str_trim_whitespace(struct str s)
+struct sv sv_trim_whitespace(struct sv s)
 {
-    return str_trim_right_whitespace(str_trim_left_whitespace(s));
+    return sv_trim_right_whitespace(sv_trim_left_whitespace(s));
 }
 
 char const *str_into_cstr_unsafe(struct str const s, char *const removed_char)
@@ -123,7 +123,12 @@ char const *str_into_cstr_unsafe(struct str const s, char *const removed_char)
     return s.ptr;
 }
 
-int str_fprint_repr(FILE *const stream, struct str const *const s)
+void str_revert_into_cstr_unsafe(struct str const s, char const removed_char)
+{
+    s.ptr[s.len] = removed_char;
+}
+
+int sv_fprint_repr(FILE *const stream, struct sv const *const s)
 {
     return fprintf(stream, "str(\"%.*s\")", str_format_args(*s));
 }
@@ -143,11 +148,6 @@ void cstrbuf_deinit(struct cstrbuf *const b)
     {
         free(b->ptr);
     }
-}
-
-void str_revert_into_cstr_unsafe(struct str const s, char const removed_char)
-{
-    s.ptr[s.len] = removed_char;
 }
 
 struct str cstrbuf_to_str(struct cstrbuf const b)
@@ -189,7 +189,7 @@ bool cstrbuf_extend_cstr(struct cstrbuf *const b, char const *const cstr)
     return cstrbuf_extend_cstrn(b, cstr, strlen(cstr));
 }
 
-bool cstrbuf_extend_str(struct cstrbuf *const b, struct str const s)
+bool cstrbuf_extend_sv(struct cstrbuf *const b, struct sv const s)
 {
     return cstrbuf_extend_cstrn(b, s.ptr, s.len);
 }
