@@ -61,3 +61,8 @@ loginfo() {
 logwarn() {
     export LOG=warn
 }
+
+setup_vscode() {
+    mkdir -p .vscode/
+    cp dev/vscode/* .vscode/
+}
