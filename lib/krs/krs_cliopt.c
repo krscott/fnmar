@@ -12,11 +12,11 @@
 #define cliopt_devf(...)
 #endif
 
-static nodiscard bool expects_arg(struct cliopt_option const *opt)
+static nodiscard bool expects_arg(struct cliopt_meta const *meta)
 {
     bool out;
 
-    switch (opt->kind)
+    switch (meta->kind)
     {
     case CLIOPT_BOOL:
         out = false;
@@ -25,6 +25,7 @@ static nodiscard bool expects_arg(struct cliopt_option const *opt)
     case CLIOPT_INT:
         out = true;
         break;
+    case CLIOPT_NONE:
     default:
         assert(false);
         out = false;
@@ -55,8 +56,11 @@ static nodiscard bool parse_arg_value( //
 
     bool success;
 
-    switch (meta->spec.kind)
+    switch (meta->kind)
     {
+    case CLIOPT_NONE:
+        assert(false);
+        break;
     case CLIOPT_BOOL:
     {
         *((bool *)meta->output) = true;
@@ -215,6 +219,20 @@ bool cliopt_parse_args( //
     cliopt_devf("skipping arg 0: %s", argv[0]);
     cliopt_devf("parsing %d args", argc - 1);
 
+    // Fixup defaults
+    for (size_t i = 0; i < opts.len; ++i)
+    {
+        struct cliopt_meta *const meta = &opts.ptr[i];
+
+        // If no spec provided, make positional arg based on ident_name
+        if (!meta->spec.name && !meta->spec.short_name)
+        {
+            meta->spec.name = meta->ident_name;
+            meta->spec.required = true;
+        }
+    }
+
+    // Debug checking
 #ifndef NDEBUG
     for (size_t i = 0; i < opts.len; ++i)
     {
@@ -224,7 +242,8 @@ bool cliopt_parse_args( //
         {
             logf(
                 LL_FATAL,
-                "Option must define at least one of 'name', 'short_name'"
+                "Option must define at least one of 'name', 'short_name', "
+                "or define meta 'ident_name'"
             );
             assert(false);
         }
@@ -234,6 +253,12 @@ bool cliopt_parse_args( //
 
         char const *const opt_name =
             meta->spec.name ? meta->spec.name : short_name_cstr;
+
+        if (meta->kind == CLIOPT_NONE)
+        {
+            logf(LL_FATAL, "Option '%s' has no kind set", opt_name);
+            assert(false);
+        }
 
         if (!meta->output)
         {
@@ -299,7 +324,7 @@ bool cliopt_parse_args( //
                 struct cliopt_meta *meta;
                 if (get_short(opts, *arg++, &meta))
                 {
-                    if (expects_arg(&meta->spec))
+                    if (expects_arg(meta))
                     {
                         if (*arg == '\0')
                         {
@@ -365,7 +390,7 @@ bool cliopt_parse_args( //
 
             if (get_long(opts, long_arg, &meta))
             {
-                if (expects_arg(&meta->spec))
+                if (expects_arg(meta))
                 {
                     if (using_equals)
                     {

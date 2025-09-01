@@ -568,66 +568,50 @@ static void print_help(void)
     printf("  -c, --config FILE   Use config file (default: %s)\n", d_config);
 }
 
+#define CLI_FIELDS(F)                                                          \
+                                                                               \
+    F(xf_simple, char const *, filename)                                       \
+                                                                               \
+    F(xf_simple_attr,                                                          \
+      char const *,                                                            \
+      config_filename,                                                         \
+      .name = "--config",                                                      \
+      .short_name = 'c')                                                       \
+                                                                               \
+    F(xf_simple_attr,                                                          \
+      bool,                                                                    \
+      help,                                                                    \
+      .name = "--help",                                                        \
+      .short_name = 'h',                                                       \
+      .sufficient = true)
+
+x_struct(cli, CLI_FIELDS);
+static cliopt_x_from_args_impl(cli, CLI_FIELDS);
+
 int main(int const argc, char const *const *const argv)
 {
     enum error err = OK;
 
     log_setup_from_env();
 
-    char const *filename = NULL;
-    char const *config_filename = DEFAULT_CONFIG_FILENAME;
-    bool help_flag = false;
-
-    struct cliopt_meta opts_arr[] = {
-        (struct cliopt_meta){
-            .spec =
-                (struct cliopt_option){
-                    .name = "filename",
-                    .kind = CLIOPT_STRING,
-                    .required = true,
-                },
-            .output = &filename,
-        },
-        (struct cliopt_meta){
-            .spec =
-                (struct cliopt_option){
-                    .name = "--config",
-                    .short_name = 'c',
-                    .kind = CLIOPT_STRING,
-                },
-            .output = &config_filename,
-        },
-        (struct cliopt_meta){
-            .spec =
-                (struct cliopt_option){
-                    .name = "--help",
-                    .short_name = 'h',
-                    .kind = CLIOPT_BOOL,
-                    .sufficient = true,
-                },
-            .output = &help_flag,
-        },
+    struct cli cli = {
+        .config_filename = DEFAULT_CONFIG_FILENAME,
     };
 
-    struct cliopt_options opts = {
-        .ptr = opts_arr,
-        .len = ARRAY_LENGTH(opts_arr),
-    };
-
-    if (!cliopt_parse_args(opts, argc, argv))
+    if (!cli_from_args(&cli, argc, argv))
     {
         print_usage();
         err = ERR_ARGS;
         goto done;
     }
 
-    if (help_flag)
+    if (cli.help)
     {
         print_help();
         goto done;
     }
 
-    err = evaluate(filename, config_filename);
+    err = evaluate(cli.filename, cli.config_filename);
 
 done:
     return (int)err;

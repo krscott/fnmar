@@ -30,6 +30,7 @@
     static_assert(1, "")
 
 #define X_STRUCT_FIELD_xf_simple(type, varname) type varname
+#define X_STRUCT_FIELD_xf_simple_attr(type, varname, ...) type varname
 #define X_STRUCT_FIELD_xf_simple_array(type, varname, len) type varname[len]
 #define X_STRUCT_FIELD_xf_struct(type, varname) struct type varname
 #define X_STRUCT_FIELD_xf_struct_array(type, varname, len)                     \
