@@ -36,6 +36,7 @@ endif()
 add_compile_options(
     -Werror=unused-result
     -Werror=return-type
+    -Werror=sometimes-uninitialized
 )
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")

@@ -12,10 +12,16 @@ struct str
     char *ptr;
     size_t len;
 };
+struct sv
+{
+    char const *ptr;
+    size_t len;
+};
 
 #define str_format_args(s) ((int)(s).len), ((s).ptr)
 
-nodiscard struct str str(char *cstr);
+nodiscard struct str str_from_cstr(char *cstr);
+nodiscard struct sv sv_from_cstr(char const *cstr);
 
 bool str_split_at_delims(
     struct str s, char const *delims, struct str *head, struct str *tail

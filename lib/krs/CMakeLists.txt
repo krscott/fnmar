@@ -8,6 +8,7 @@ target_sources(krslib PRIVATE
     krs_dynamic_array.c
     krs_log.c
     krs_str.c
+    krs_span.c
 )
 
 

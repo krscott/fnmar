@@ -7,9 +7,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct str str(char *const cstr)
+struct str str_from_cstr(char *const cstr)
 {
     return (struct str){
+        .ptr = cstr,
+        .len = strlen(cstr),
+    };
+}
+struct sv sv_from_cstr(char const *const cstr)
+{
+    return (struct sv){
         .ptr = cstr,
         .len = strlen(cstr),
     };
