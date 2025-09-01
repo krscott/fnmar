@@ -44,6 +44,8 @@ static inline struct sv sv_from_str(struct str const str)
         struct str const *: (struct sv const *)(x)                             \
     )
 
+nodiscard bool sv_equal_cstr(struct sv s, char const *cstr);
+
 bool sv_split_at_delims(
     struct sv s, char const *delims, struct sv *head, struct sv *tail
 );

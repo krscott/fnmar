@@ -23,6 +23,9 @@ typedef double f64;
 
 #define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 // Get printf format string for a type.
 // Does *not* assume a `char *` is a `%s`.
 #define BASIC_TYPE_FORMAT(x)                                                   \

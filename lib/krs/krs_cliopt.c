@@ -7,7 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define cliopt_devf(...) logf(LL_DEV, "cliopt " __VA_ARGS__)
+// #define cliopt_devf(...) logf(LL_DEV, "cliopt " __VA_ARGS__)
+#ifndef cliopt_devf
+#define cliopt_devf(...)
+#endif
 
 static nodiscard bool expects_arg(struct cliopt_option const *opt)
 {
@@ -172,7 +175,7 @@ static bool get_long( //
     {
         struct cliopt_meta *const meta = &opts.ptr[i];
         if (is_long_arg(&meta->spec) &&
-            strncmp(meta->spec.name, long_name.ptr, long_name.len) == 0)
+            sv_equal_cstr(long_name, meta->spec.name))
         {
             *out = meta;
             success = true;

@@ -552,7 +552,10 @@ done:
     return err;
 }
 
-static void print_usage(void) { printf("Usage: fnmar [options] file\n"); }
+static void print_usage(void)
+{
+    printf("Usage: fnmar [-h] [-c configfile] file\n");
+}
 
 static void print_help(void)
 {

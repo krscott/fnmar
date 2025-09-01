@@ -26,6 +26,12 @@ struct sv sv_from_cstr(char const *const cstr)
     };
 }
 
+bool sv_equal_cstr(struct sv const s, char const *const cstr)
+{
+    assert(cstr);
+    return (s.len == strlen(cstr)) && (strncmp(s.ptr, cstr, s.len) == 0);
+}
+
 bool sv_split_at_delims(
     struct sv const s,
     char const *const delims,
