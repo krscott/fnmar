@@ -1,36 +1,13 @@
 #include "krs_cliopt.h"
-#include "krs_cc_ext.h"
 #include "krs_log.h"
 #include "krs_str.h"
 #include "krs_types.h"
 #include <errno.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-enum cliopt_kind
-{
-    CLIOPT_BOOL,
-    CLIOPT_CSTR,
-    CLIOPT_INT,
-};
-
-struct cliopt_option
-{
-    char const *name;
-    char short_name;
-    enum cliopt_kind kind;
-    bool required;
-};
-
-struct cliopt_meta
-{
-    struct cliopt_option spec;
-    bool used;
-    char const *arg;
-    void *output;
-};
+#define cliopt_devf(...) logf(LL_DEV, "cliopt " __VA_ARGS__)
 
 static nodiscard bool expects_arg(struct cliopt_option const *opt)
 {
@@ -41,7 +18,7 @@ static nodiscard bool expects_arg(struct cliopt_option const *opt)
     case CLIOPT_BOOL:
         out = false;
         break;
-    case CLIOPT_CSTR:
+    case CLIOPT_STRING:
     case CLIOPT_INT:
         out = true;
         break;
@@ -75,7 +52,7 @@ static nodiscard bool parse_arg_value( //
         success = true;
     }
     break;
-    case CLIOPT_CSTR:
+    case CLIOPT_STRING:
     {
         *((char const **)meta->output) = arg;
         success = true;
@@ -117,12 +94,6 @@ static nodiscard bool parse_arg_value( //
     return success;
 }
 
-struct cliopt_options
-{
-    struct cliopt_meta *ptr;
-    size_t len;
-};
-
 static bool nodiscard get_next_positional( //
     struct cliopt_options const opts,
     struct cliopt_meta **const out
@@ -137,6 +108,7 @@ static bool nodiscard get_next_positional( //
         {
             *out = meta;
             success = true;
+            cliopt_devf("Got positional arg '%s'", meta->spec.name);
             break;
         }
     }
@@ -163,6 +135,7 @@ static bool get_short( //
         {
             *out = meta;
             success = true;
+            cliopt_devf("Got short arg '-%c'", meta->spec.short_name);
             break;
         }
     }
@@ -189,6 +162,7 @@ static bool get_long( //
         {
             *out = meta;
             success = true;
+            cliopt_devf("Got long arg '--%s'", meta->spec.name);
             break;
         }
     }
@@ -197,35 +171,37 @@ static bool get_long( //
     {
         logf(
             LL_FATAL,
-            "Unrecognized option '%.*s'",
+            "Unrecognized option '--%.*s'",
             str_format_args(long_name)
         );
     }
     return success;
 }
 
-struct args
-{
-    char const *const *ptr;
-    size_t len;
-};
-
-static nodiscard bool parse_args( //
+bool cliopt_parse_args( //
     struct cliopt_options const opts,
     int const argc,
     char const *const *argv
 )
 {
-    bool success = false;
+    cliopt_devf("skipping arg 0: %s", argv[0]);
+    cliopt_devf("parsing %d args", argc - 1);
+
+    bool success = true;
     bool positional_only = false;
 
-    int i = 0;
-    while (i < argc)
+    int i = 1;
+    while (success && i < argc)
     {
-        char const *arg = argv[i++];
+        char const *const full_arg = argv[i++];
+        char const *arg = full_arg;
+
+        cliopt_devf("arg: %s", arg);
 
         if (positional_only || *arg != '-')
         {
+            // positional arg
+
             struct cliopt_meta *meta;
             if (get_next_positional(opts, &meta))
             {
@@ -234,12 +210,14 @@ static nodiscard bool parse_args( //
             else
             {
                 success = false;
-                goto done;
             }
+            cliopt_devf("positional success=%d", success);
         }
         else if (*(++arg) != '-')
         {
-            while (*arg != '\0')
+            // short arg
+
+            while (success && *arg != '\0')
             {
                 // loop over combined bools, e.g. `-abc123`
 
@@ -263,7 +241,6 @@ static nodiscard bool parse_args( //
                                     meta->spec.short_name
                                 );
                                 success = false;
-                                goto done;
                             }
                         }
                         else if (*arg == '=')
@@ -276,23 +253,31 @@ static nodiscard bool parse_args( //
                             // smooshed arg e.g. `-a123`
                         }
 
-                        success = parse_arg_value(meta, arg);
+                        success = success && parse_arg_value(meta, arg);
                         break;
                     }
                 }
                 else
                 {
                     success = false;
-                    goto done;
                 }
             }
+            cliopt_devf("short success=%d", success);
         }
-        else if (strcmp(arg, "--") == 0)
+        else if (strcmp(full_arg, "--") == 0)
         {
+            // positional split arg `--`
+
             positional_only = true;
+
+            cliopt_devf("switch to positional-only");
         }
         else
         {
+            // long arg
+
+            ++arg;
+
             struct cliopt_meta *meta;
 
             struct sv const arg_str = sv_from_cstr(arg);
@@ -306,9 +291,17 @@ static nodiscard bool parse_args( //
             {
                 if (expects_arg(&meta->spec))
                 {
-                    if (*arg == '\0')
+                    if (using_equals)
                     {
-                        // separate arg e.g. `-a 123`
+                        // equals arg e.g. `--arg=123`
+
+                        // NOTE: This is sound because tail was split from cstr
+                        assert(tail.ptr[tail.len] == '\0');
+                        arg = tail.ptr;
+                    }
+                    else
+                    {
+                        // separate arg e.g. `--arg 123`
                         if (i < argc)
                         {
                             arg = argv[i++];
@@ -317,35 +310,24 @@ static nodiscard bool parse_args( //
                         {
                             logf(
                                 LL_FATAL,
-                                "%s requires an argument",
-                                meta->spec.name
+                                "-%c requires an argument",
+                                meta->spec.short_name
                             );
                             success = false;
-                            goto done;
                         }
                     }
-                    else if (using_equals)
-                    {
-                        // equals arg e.g. `-a=123`
-                        ++arg;
-                    }
-                    else
-                    {
-                        // smooshed arg e.g. `-a123`
-                    }
 
-                    success = parse_arg_value(meta, arg);
-                    break;
+                    success = success && parse_arg_value(meta, arg);
                 }
             }
             else
             {
                 success = false;
-                goto done;
             }
+
+            cliopt_devf("long success=%d", success);
         }
     }
 
-done:
     return success;
 }

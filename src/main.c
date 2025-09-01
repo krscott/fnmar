@@ -1,3 +1,4 @@
+#include "krs_cliopt.h"
 #include "krs_log.h"
 #include "krs_str.h"
 #include "krs_types.h"
@@ -488,11 +489,16 @@ done:
     return err;
 }
 
-static enum error evaluate(char const *const filename)
+static enum error evaluate( //
+    char const *const filename,
+    char const *const config_filename
+)
 {
+    assert(filename);
+    assert(config_filename);
+
     struct cstrbuf config_str = {0};
-    enum error err =
-        cstrbuf_init_from_file(&config_str, DEFAULT_CONFIG_FILENAME);
+    enum error err = cstrbuf_init_from_file(&config_str, config_filename);
     if (err)
     {
         goto done;
@@ -548,19 +554,56 @@ done:
 
 int main(int const argc, char const *const *const argv)
 {
-    log_setup_from_env();
-
     enum error err = OK;
 
-    if (argc != 2)
+    log_setup_from_env();
+
+    char const *filename = NULL;
+    char const *config_filename = DEFAULT_CONFIG_FILENAME;
+    bool help_flag = false;
+
+    struct cliopt_meta opts_arr[] = {
+        (struct cliopt_meta){
+            .spec =
+                (struct cliopt_option){
+                    .name = "filename",
+                    .kind = CLIOPT_STRING,
+                },
+            .output = &filename,
+        },
+        (struct cliopt_meta){
+            .spec =
+                (struct cliopt_option){
+                    .name = "config",
+                    .short_name = 'c',
+                    .kind = CLIOPT_STRING,
+                },
+            .output = &config_filename,
+        },
+        (struct cliopt_meta){
+            .spec =
+                (struct cliopt_option){
+                    .name = "help",
+                    .short_name = 'h',
+                    .kind = CLIOPT_BOOL,
+                },
+            .output = &help_flag,
+        },
+    };
+
+    struct cliopt_options opts = {
+        .ptr = opts_arr,
+        .len = ARRAY_LENGTH(opts_arr),
+    };
+
+    if (!cliopt_parse_args(opts, argc, argv))
     {
         printf("Usage: %s file\n", argv[0]);
         err = ERR_ARGS;
         goto done;
     }
 
-    char const *const filename = argv[1];
-    err = evaluate(filename);
+    err = evaluate(filename, config_filename);
 
 done:
     return (int)err;

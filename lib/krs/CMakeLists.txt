@@ -5,10 +5,11 @@ add_library(krslib)
 target_include_directories(krslib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_sources(krslib PRIVATE
+    krs_cliopt.c
     krs_dynamic_array.c
     krs_log.c
-    krs_str.c
     krs_span.c
+    krs_str.c
 )
 
 

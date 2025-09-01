@@ -13,6 +13,9 @@ char const *log_level_to_cstr(enum log_level const ll)
 
     switch (ll)
     {
+    case LL_DEV:
+        s = "TEST";
+        break;
     case LL_FATAL:
         s = "FATAL";
         break;

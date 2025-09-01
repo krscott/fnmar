@@ -6,6 +6,7 @@
 
 enum log_level
 {
+    LL_DEV,
     LL_FATAL,
     LL_ERROR,
     LL_WARN,
