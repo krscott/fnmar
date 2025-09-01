@@ -14,7 +14,7 @@ enum cliopt_kind
     CLIOPT_INT,
 };
 
-struct cliopt_option
+struct cliopt_spec
 {
     char const *name;
     char short_name;
@@ -24,7 +24,7 @@ struct cliopt_option
 
 struct cliopt_meta
 {
-    struct cliopt_option spec;
+    struct cliopt_spec spec;
     enum cliopt_kind kind;
     char const *ident_name;
     void *output;
@@ -46,7 +46,7 @@ nodiscard bool cliopt_parse_args( //
 #define CLIOPT_X_FIELD_xf_simple_attr(type, varname, ...)                      \
     (struct cliopt_meta)                                                       \
     {                                                                          \
-        .spec = (struct cliopt_option){__VA_ARGS__},                           \
+        .spec = (struct cliopt_spec){__VA_ARGS__},                             \
         .kind = _Generic(                                                      \
             (cli_data->varname),                                               \
             bool: CLIOPT_BOOL,                                                 \
