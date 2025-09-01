@@ -151,6 +151,12 @@ static bool get_short( //
     {
         logf(LL_FATAL, "Unrecognized option '-%c'", short_name);
     }
+    else if ((*out)->used)
+    {
+        logf(LL_FATAL, "Option '-%c' already used", short_name);
+        success = false;
+    }
+
     return success;
 }
 
@@ -183,6 +189,16 @@ static bool get_long( //
             str_format_args(long_name)
         );
     }
+    else if ((*out)->used)
+    {
+        logf(
+            LL_FATAL,
+            "Option '%.*s' already used",
+            str_format_args(long_name)
+        );
+        success = false;
+    }
+
     return success;
 }
 
