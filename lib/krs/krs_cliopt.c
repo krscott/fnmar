@@ -51,6 +51,7 @@ static nodiscard bool parse_arg_value( //
 {
     assert(arg);
     assert(!meta->used);
+    assert(meta->output);
 
     bool success;
 
@@ -219,13 +220,34 @@ bool cliopt_parse_args( //
     {
         struct cliopt_meta const *const meta = &opts.ptr[i];
 
+        if (!meta->spec.name && !meta->spec.short_name)
+        {
+            logf(
+                LL_FATAL,
+                "Option must define at least one of 'name', 'short_name'"
+            );
+            assert(false);
+        }
+
+        char short_name_cstr[] = "-x";
+        short_name_cstr[1] = meta->spec.short_name;
+
+        char const *const opt_name =
+            meta->spec.name ? meta->spec.name : short_name_cstr;
+
+        if (!meta->output)
+        {
+            logf(LL_FATAL, "Option '%s' output ptr is NULL", opt_name);
+            assert(false);
+        }
+
         if (meta->spec.name && meta->spec.short_name != '\0')
         {
             // If an arg has a short flag, it must not use a positional name
             if (!is_long_arg(&meta->spec))
             {
                 logf(
-                    LL_ERROR,
+                    LL_FATAL,
                     "Short option '-%c' with positional name '%s' (change to "
                     "'--%s')",
                     meta->spec.short_name,

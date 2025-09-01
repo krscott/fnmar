@@ -563,7 +563,10 @@ static void print_help(void)
     printf("\n");
     printf("Options:\n");
     printf("  -h, --help          Show help\n");
-    printf("  -c, --config FILE   Use config file\n");
+    printf(
+        "  -c, --config FILE   Use config file (default: %s)\n",
+        DEFAULT_CONFIG_FILENAME
+    );
 }
 
 int main(int const argc, char const *const *const argv)
