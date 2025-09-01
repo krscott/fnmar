@@ -75,12 +75,12 @@ static nodiscard bool parse_arg_value( //
 
         if (errno)
         {
-            logf(LL_FATAL, "%s: %s", strerror(errno), arg);
+            logf(LL_ERROR, "%s: %s", strerror(errno), arg);
             success = false;
         }
         else if (*tail != '\0')
         {
-            logf(LL_FATAL, "Not an integer: %s", arg);
+            logf(LL_ERROR, "Not an integer: %s", arg);
             success = false;
         }
         else
@@ -122,7 +122,7 @@ static bool nodiscard get_next_positional( //
 
     if (!success)
     {
-        logf(LL_FATAL, "Too many positional arguments");
+        logf(LL_ERROR, "Too many positional arguments");
     }
     return success;
 }
@@ -149,11 +149,11 @@ static bool get_short( //
 
     if (!success)
     {
-        logf(LL_FATAL, "Unrecognized option '-%c'", short_name);
+        logf(LL_ERROR, "Unrecognized option '-%c'", short_name);
     }
     else if ((*out)->used)
     {
-        logf(LL_FATAL, "Option '-%c' already used", short_name);
+        logf(LL_ERROR, "Option '-%c' already used", short_name);
         success = false;
     }
 
@@ -184,7 +184,7 @@ static bool get_long( //
     if (!success)
     {
         logf(
-            LL_FATAL,
+            LL_ERROR,
             "Unrecognized option '%.*s'",
             str_format_args(long_name)
         );
@@ -192,7 +192,7 @@ static bool get_long( //
     else if ((*out)->used)
     {
         logf(
-            LL_FATAL,
+            LL_ERROR,
             "Option '%.*s' already used",
             str_format_args(long_name)
         );
@@ -222,7 +222,7 @@ bool cliopt_parse_args( //
             if (!is_long_arg(&meta->spec))
             {
                 logf(
-                    LL_FATAL,
+                    LL_ERROR,
                     "Short option '-%c' with positional name '%s' (change to "
                     "'--%s')",
                     meta->spec.short_name,
@@ -286,7 +286,7 @@ bool cliopt_parse_args( //
                             else
                             {
                                 logf(
-                                    LL_FATAL,
+                                    LL_ERROR,
                                     "-%c requires an argument",
                                     meta->spec.short_name
                                 );
@@ -360,7 +360,7 @@ bool cliopt_parse_args( //
                         else
                         {
                             logf(
-                                LL_FATAL,
+                                LL_ERROR,
                                 "-%c requires an argument",
                                 meta->spec.short_name
                             );
@@ -410,7 +410,7 @@ bool cliopt_parse_args( //
                 if (meta->spec.required && !meta->used)
                 {
                     logf(
-                        LL_FATAL,
+                        LL_ERROR,
                         "Missing required argument '%s'",
                         meta->spec.name
                     );
