@@ -26,6 +26,21 @@ static_assert(offsetof(struct str, ptr) == offsetof(struct sv, ptr), "");
 static_assert(offsetof(struct str, len) == offsetof(struct sv, len), "");
 static_assert(sizeof(struct str) == sizeof(struct sv), "");
 
+nodiscard static inline struct str str_empty(void)
+{
+    return (struct str){
+        .ptr = "",
+        .len = 0,
+    };
+}
+nodiscard static inline struct sv sv_empty(void)
+{
+    return (struct sv){
+        .ptr = "",
+        .len = 0,
+    };
+}
+
 // TODO: rename to sv_*
 #define str_format_args(s) ((int)(s).len), ((s).ptr)
 
@@ -37,12 +52,6 @@ static inline struct sv sv_from_str(struct str const str)
         .len = str.len,
     };
 }
-#define sv_cast(x)                                                             \
-    _Generic(                                                                  \
-        (x),                                                                   \
-        struct str *: (struct sv *)(x),                                        \
-        struct str const *: (struct sv const *)(x)                             \
-    )
 
 nodiscard bool sv_equal_cstr(struct sv s, char const *cstr);
 
@@ -74,23 +83,35 @@ static inline bool str_split_at_delims(
     struct str s, char const *delims, struct str *head, struct str *tail
 )
 {
-    return sv_split_at_delims(
-        sv_from_str(s),
-        delims,
-        sv_cast(head),
-        sv_cast(tail)
-    );
+    struct sv h = sv_empty();
+    struct sv t = sv_empty();
+    bool split = sv_split_at_delims(sv_from_str(s), delims, &h, &t);
+    if (head)
+    {
+        *head = str_from_sv_unsafe(h);
+    }
+    if (tail)
+    {
+        *tail = str_from_sv_unsafe(t);
+    }
+    return split;
 }
 static inline bool str_split_delims(
     struct str s, char const *delims, struct str *head, struct str *tail
 )
 {
-    return sv_split_delims(
-        sv_from_str(s),
-        delims,
-        sv_cast(head),
-        sv_cast(tail)
-    );
+    struct sv h = sv_empty();
+    struct sv t = sv_empty();
+    bool split = sv_split_delims(sv_from_str(s), delims, &h, &t);
+    if (head)
+    {
+        *head = str_from_sv_unsafe(h);
+    }
+    if (tail)
+    {
+        *tail = str_from_sv_unsafe(t);
+    }
+    return split;
 }
 static inline nodiscard struct str str_trim_left_char(struct str s, char c)
 {

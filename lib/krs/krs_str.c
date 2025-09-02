@@ -72,7 +72,7 @@ bool sv_split_at_delims(
     }
     if (tail)
     {
-        *tail = (struct sv){0};
+        *tail = sv_empty();
     }
 
 done:
@@ -88,7 +88,7 @@ bool sv_split_delims(
 {
     bool const is_split = sv_split_at_delims(s, delims, head, tail);
 
-    if (is_split && tail)
+    if (is_split && tail && tail->len > 0)
     {
         ++tail->ptr;
         --tail->len;

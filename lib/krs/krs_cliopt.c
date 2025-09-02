@@ -405,7 +405,7 @@ bool cliopt_print_help(struct cliopt_options const opts)
     int max_len = 0;
     for (size_t i = 0; i < pos_lines.len; ++i)
     {
-        struct str head = {0};
+        struct str head = str_empty();
         if (str_split_delims(
                 cstrbuf_to_str(pos_lines.ptr[i]),
                 SEP,
@@ -422,7 +422,7 @@ bool cliopt_print_help(struct cliopt_options const opts)
     }
     for (size_t i = 0; i < opt_lines.len; ++i)
     {
-        struct str head = {0};
+        struct str head = str_empty();
         if (str_split_delims(
                 cstrbuf_to_str(opt_lines.ptr[i]),
                 SEP,
@@ -446,8 +446,8 @@ bool cliopt_print_help(struct cliopt_options const opts)
             printf("Positional arguments:\n");
         }
 
-        struct str head = {0};
-        struct str tail = {0};
+        struct str head = str_empty();
+        struct str tail = str_empty();
         if (str_split_delims(
                 cstrbuf_to_str(pos_lines.ptr[i]),
                 SEP,
@@ -456,10 +456,10 @@ bool cliopt_print_help(struct cliopt_options const opts)
             ))
         {
             printf(
-                "  %-*s    %s\n",
+                "  %-*.*s    %.*s\n",
                 max_len,
-                str_into_cstr_unsafe(head, NULL),
-                str_into_cstr_unsafe(tail, NULL)
+                str_format_args(head),
+                str_format_args(tail)
             );
         }
         else
@@ -475,8 +475,8 @@ bool cliopt_print_help(struct cliopt_options const opts)
             printf("Options:\n");
         }
 
-        struct str head = {0};
-        struct str tail = {0};
+        struct str head = str_empty();
+        struct str tail = str_empty();
         if (str_split_delims(
                 cstrbuf_to_str(opt_lines.ptr[i]),
                 SEP,
@@ -485,10 +485,10 @@ bool cliopt_print_help(struct cliopt_options const opts)
             ))
         {
             printf(
-                "  %-*s    %s\n",
+                "  %-*.*s    %.*s\n",
                 max_len,
-                str_into_cstr_unsafe(head, NULL),
-                str_into_cstr_unsafe(tail, NULL)
+                str_format_args(head),
+                str_format_args(tail)
             );
         }
         else
