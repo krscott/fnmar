@@ -31,9 +31,6 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
         -Werror=sometimes-uninitialized
     )
-
-    add_compile_options(
-    )
 else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
@@ -43,11 +40,16 @@ add_compile_options(
     -Werror=return-type
 )
 
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build")
 
-    add_compile_options(-O0 -fsanitize=undefined -fsanitize=address)
+    add_compile_options(-fsanitize=undefined -fsanitize=address)
     add_link_options(-fsanitize=undefined -fsanitize=address)
+
+    if(DEFINED ENV{DISABLE_OPTIMIZATIONS})
+        message("Disabled Optimization")
+        add_compile_options(-O0)
+    endif()
 else()
     message("Release build")
     set(CMAKE_UNITY_BUILD ON)

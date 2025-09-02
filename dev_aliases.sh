@@ -42,12 +42,19 @@ crun() {
     )
 }
 
+release() {
+    unset DISABLE_OPTIMZATIONS
+    unset CMAKE_BUILD_TYPE
+}
+
 debug() {
+    release
     export CMAKE_BUILD_TYPE=Debug
 }
 
-release() {
-    unset CMAKE_BUILD_TYPE
+o0() {
+    debug
+    export DISABLE_OPTIMIZATIONS=1
 }
 
 logdebug() {
