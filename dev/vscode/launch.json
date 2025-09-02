@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Debug LLDB",
-            "type": "lldb",
+            "type": "lldb-dap",
             "request": "launch",
             "program": "build/src/fnmar",
             "args": [],
