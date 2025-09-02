@@ -24,6 +24,28 @@ cfg
 
 # Build and run
 run
+
+# Setup vscode debugging
+setup_vscode
+```
+
+### Debugging
+
+Example [`launch.json`](dev/vscode/launch.json) and 
+[`tasks.json`](dev/vscode/tasks.json) files are included to debug in vscode.
+
+Nix home-manager setup
+```nix
+    programs.vscode = {
+      enable = true;
+      package = pkgs.vscodium;
+      profiles.default.extensions = with pkgs.vscode-extensions; [
+        llvm-vs-code-extensions.lldb-dap
+        llvm-vs-code-extensions.vscode-clangd
+      ];
+      userSettings = lib.importJSON ./settings.json;
+      keybindings = lib.importJSON ./keybindings.json;
+    };
 ```
 
 ## Design Philosophy
