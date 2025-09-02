@@ -1,4 +1,5 @@
 #include "krs_cliopt.h"
+#include "krs_dynamic_array.h"
 #include "krs_log.h"
 #include "krs_str.h"
 #include "krs_types.h"
@@ -54,7 +55,7 @@ static nodiscard bool parse_arg_value( //
     assert(!meta->used);
     assert(meta->output);
 
-    bool success;
+    bool ok;
 
     switch (meta->kind)
     {
@@ -64,13 +65,13 @@ static nodiscard bool parse_arg_value( //
     case CLIOPT_BOOL:
     {
         *((bool *)meta->output) = true;
-        success = true;
+        ok = true;
     }
     break;
     case CLIOPT_STRING:
     {
         *((char const **)meta->output) = arg;
-        success = true;
+        ok = true;
     }
     break;
     case CLIOPT_INT:
@@ -84,29 +85,29 @@ static nodiscard bool parse_arg_value( //
         if (errno)
         {
             logf(LL_ERROR, "%s: %s", strerror(errno), arg);
-            success = false;
+            ok = false;
         }
         else if (*tail != '\0')
         {
             logf(LL_ERROR, "Not an integer: %s", arg);
-            success = false;
+            ok = false;
         }
         else
         {
-            success = true;
+            ok = true;
         }
     }
     break;
     default:
     {
         assert(false);
-        success = false;
+        ok = false;
     }
     break;
     }
 
     meta->used = true;
-    return success;
+    return ok;
 }
 
 static bool nodiscard get_next_positional( //
@@ -114,7 +115,7 @@ static bool nodiscard get_next_positional( //
     struct cliopt_meta **const out
 )
 {
-    bool success = false;
+    bool ok = false;
 
     for (u32 i = 0; i < opts.len; ++i)
     {
@@ -122,17 +123,17 @@ static bool nodiscard get_next_positional( //
         if (!meta->used && is_positional_arg(&meta->spec))
         {
             *out = meta;
-            success = true;
+            ok = true;
             cliopt_devf("Got positional arg '%s'", meta->spec.name);
             break;
         }
     }
 
-    if (!success)
+    if (!ok)
     {
         logf(LL_ERROR, "Too many positional arguments");
     }
-    return success;
+    return ok;
 }
 
 static bool get_short( //
@@ -141,7 +142,7 @@ static bool get_short( //
     struct cliopt_meta **const out
 )
 {
-    bool success = false;
+    bool ok = false;
 
     for (u32 i = 0; i < opts.len; ++i)
     {
@@ -149,23 +150,23 @@ static bool get_short( //
         if (meta->spec.short_name == short_name)
         {
             *out = meta;
-            success = true;
+            ok = true;
             cliopt_devf("Got short arg '-%c'", meta->spec.short_name);
             break;
         }
     }
 
-    if (!success)
+    if (!ok)
     {
         logf(LL_ERROR, "Unrecognized option '-%c'", short_name);
     }
     else if ((*out)->used)
     {
         logf(LL_ERROR, "Option '-%c' already used", short_name);
-        success = false;
+        ok = false;
     }
 
-    return success;
+    return ok;
 }
 
 static bool get_long( //
@@ -174,7 +175,7 @@ static bool get_long( //
     struct cliopt_meta **const out
 )
 {
-    bool success = false;
+    bool ok = false;
 
     for (u32 i = 0; i < opts.len; ++i)
     {
@@ -183,13 +184,13 @@ static bool get_long( //
             sv_equal_cstr(long_name, meta->spec.name))
         {
             *out = meta;
-            success = true;
+            ok = true;
             cliopt_devf("Got long arg '%s'", meta->spec.name);
             break;
         }
     }
 
-    if (!success)
+    if (!ok)
     {
         logf(
             LL_ERROR,
@@ -204,22 +205,329 @@ static bool get_long( //
             "Option '%.*s' already used",
             str_format_args(long_name)
         );
-        success = false;
+        ok = false;
     }
 
-    return success;
+    return ok;
+}
+
+// static void print_usage(void)
+// {
+//     printf("Usage: fnmar [-h] [-c configfile] file\n");
+// }
+
+struct optstrs
+{
+    struct cstrbuf *ptr;
+    size_t len;
+    size_t cap;
+};
+
+struct helpstrs
+{
+    char const **ptr;
+    size_t len;
+    size_t cap;
+};
+
+bool cliopt_print_usage(
+    struct cliopt_options const opts, struct cliopt_prog const progopts
+)
+{
+    size_t const N = 200;
+    bool ok = true;
+    bool any_optional_options = false;
+    struct cstrbuf usage = {0};
+
+    for (size_t i = 0; i < opts.len; ++i)
+    {
+        struct cliopt_spec const spec = opts.ptr[i].spec;
+        bool const has_arg = expects_arg(&opts.ptr[i]);
+
+        if (is_positional_arg(&spec))
+        {
+            if (spec.required)
+            {
+                cstrbuf_snprintf(&ok, &usage, N, "%s ", spec.name);
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+            else
+            {
+                cstrbuf_snprintf(&ok, &usage, N, "[%s] ", spec.name);
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+        }
+        else
+        {
+            if (spec.required)
+            {
+                if (spec.short_name)
+                {
+                    cstrbuf_snprintf(&ok, &usage, N, "-%c ", spec.short_name);
+                    if (!ok)
+                    {
+                        goto done;
+                    }
+                }
+                else
+                {
+                    cstrbuf_snprintf(&ok, &usage, N, "%s ", spec.name);
+                    if (!ok)
+                    {
+                        goto done;
+                    }
+                }
+
+                if (has_arg)
+                {
+                    cstrbuf_snprintf(&ok, &usage, N, "%s ", spec.argname);
+                    if (!ok)
+                    {
+                        goto done;
+                    }
+                }
+            }
+            else
+            {
+                any_optional_options = true;
+            }
+        }
+    }
+
+    printf("Usage: %s", progopts.name);
+    if (any_optional_options)
+    {
+        printf(" [options]");
+    }
+    printf(" %s\n", usage.ptr);
+
+done:
+    cstrbuf_deinit(&usage);
+    return ok;
+}
+
+bool cliopt_print_help(struct cliopt_options const opts)
+{
+    size_t const N = 200;
+    char const *SEP = "\1";
+
+    bool ok = true;
+    struct optstrs pos_lines = {0};
+    struct optstrs opt_lines = {0};
+
+    for (size_t i = 0; i < opts.len; ++i)
+    {
+        struct cliopt_spec const spec = opts.ptr[i].spec;
+        bool const has_arg = expects_arg(&opts.ptr[i]);
+
+        if (is_positional_arg(&spec))
+        {
+            struct cstrbuf *line;
+            ok = da_emplace_uninit(&pos_lines, &line);
+            if (!ok)
+            {
+                goto done;
+            }
+            *line = (struct cstrbuf){0};
+
+            ok = cstrbuf_extend_cstr(line, spec.name);
+            if (!ok)
+            {
+                goto done;
+            }
+
+            cstrbuf_snprintf(&ok, line, N, "%s%s", SEP, spec.help);
+            if (!ok)
+            {
+                goto done;
+            }
+        }
+        else
+        {
+            struct cstrbuf *line;
+            ok = da_emplace_uninit(&opt_lines, &line);
+            if (!ok)
+            {
+                goto done;
+            }
+            *line = (struct cstrbuf){0};
+
+            if (spec.short_name)
+            {
+                cstrbuf_snprintf(&ok, line, N, "-%c", spec.short_name);
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+
+            if (spec.short_name && spec.name)
+            {
+                ok = cstrbuf_extend_cstr(line, ", ");
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+
+            if (spec.name)
+            {
+                ok = cstrbuf_extend_cstr(line, spec.name);
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+
+            if (has_arg)
+            {
+                cstrbuf_snprintf(&ok, line, N, " %s", spec.argname);
+                if (!ok)
+                {
+                    goto done;
+                }
+            }
+
+            cstrbuf_snprintf(&ok, line, N, "%s%s", SEP, spec.help);
+            if (!ok)
+            {
+                goto done;
+            }
+        }
+    }
+
+    int max_len = 0;
+    for (size_t i = 0; i < pos_lines.len; ++i)
+    {
+        struct str head;
+        if (str_split_delims(
+                cstrbuf_to_str(pos_lines.ptr[i]),
+                SEP,
+                &head,
+                NULL
+            ))
+        {
+            max_len = MAX(max_len, (int)head.len);
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+    for (size_t i = 0; i < opt_lines.len; ++i)
+    {
+        struct str head;
+        if (str_split_delims(
+                cstrbuf_to_str(opt_lines.ptr[i]),
+                SEP,
+                &head,
+                NULL
+            ))
+        {
+            max_len = MAX(max_len, (int)head.len);
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+
+    for (size_t i = 0; i < pos_lines.len; ++i)
+    {
+        if (i == 0)
+        {
+            printf("\n");
+            printf("Positional arguments:\n");
+        }
+
+        struct str head;
+        struct str tail;
+        if (str_split_delims(
+                cstrbuf_to_str(pos_lines.ptr[i]),
+                SEP,
+                &head,
+                &tail
+            ))
+        {
+            printf(
+                "  %-*s    %s\n",
+                max_len,
+                str_into_cstr_unsafe(head, NULL),
+                str_into_cstr_unsafe(tail, NULL)
+            );
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+    for (size_t i = 0; i < opt_lines.len; ++i)
+    {
+        if (i == 0)
+        {
+            printf("\n");
+            printf("Options:\n");
+        }
+
+        struct str head;
+        struct str tail;
+        if (str_split_delims(
+                cstrbuf_to_str(opt_lines.ptr[i]),
+                SEP,
+                &head,
+                &tail
+            ))
+        {
+            printf(
+                "  %-*s    %s\n",
+                max_len,
+                str_into_cstr_unsafe(head, NULL),
+                str_into_cstr_unsafe(tail, NULL)
+            );
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+
+done:
+    for (size_t i = 0; i < pos_lines.len; ++i)
+    {
+        cstrbuf_deinit(&pos_lines.ptr[i]);
+    }
+    da_deinit(&pos_lines);
+    for (size_t i = 0; i < opt_lines.len; ++i)
+    {
+        cstrbuf_deinit(&opt_lines.ptr[i]);
+    }
+    da_deinit(&opt_lines);
+
+    return ok;
 }
 
 bool cliopt_parse_args( //
-    struct cliopt_options const opts,
+    struct cliopt_options opts,
     int const argc,
-    char const *const *argv
+    char const *const *argv,
+    struct cliopt_prog progopts
 )
 {
     cliopt_devf("skipping arg 0: %s", argv[0]);
     cliopt_devf("parsing %d args", argc - 1);
 
     // Fixup defaults
+    if (!progopts.name)
+    {
+        progopts.name = argv[0];
+    }
+
     for (size_t i = 0; i < opts.len; ++i)
     {
         struct cliopt_meta *const meta = &opts.ptr[i];
@@ -229,6 +537,16 @@ bool cliopt_parse_args( //
         {
             meta->spec.name = meta->ident_name;
             meta->spec.required = true;
+        }
+
+        if (!meta->spec.help)
+        {
+            meta->spec.help = "";
+        }
+
+        if (!meta->spec.argname)
+        {
+            meta->spec.argname = "VAL";
         }
     }
 
@@ -285,10 +603,10 @@ bool cliopt_parse_args( //
     }
 #endif
 
-    bool success = true;
+    bool ok = true;
     bool positional_only = false;
 
-    for (int i = 1; success && i < argc;)
+    for (int i = 1; ok && i < argc;)
     {
         char const *const full_arg = argv[i++];
 
@@ -302,13 +620,13 @@ bool cliopt_parse_args( //
             struct cliopt_meta *meta;
             if (get_next_positional(opts, &meta))
             {
-                success = parse_arg_value(meta, full_arg);
+                ok = parse_arg_value(meta, full_arg);
             }
             else
             {
-                success = false;
+                ok = false;
             }
-            cliopt_devf("positional success=%d", success);
+            cliopt_devf("positional ok=%d", ok);
         }
         else if (full_arg[1] != '-')
         {
@@ -317,7 +635,7 @@ bool cliopt_parse_args( //
 
             char const *arg = &full_arg[1];
 
-            while (success && *arg != '\0')
+            while (ok && *arg != '\0')
             {
                 // loop over combined bools, e.g. `-abc123`
 
@@ -340,7 +658,7 @@ bool cliopt_parse_args( //
                                     "-%c requires an argument",
                                     meta->spec.short_name
                                 );
-                                success = false;
+                                ok = false;
                             }
                         }
                         else if (*arg == '=')
@@ -353,20 +671,20 @@ bool cliopt_parse_args( //
                             // smooshed arg e.g. `-a123`
                         }
 
-                        success = success && parse_arg_value(meta, arg);
+                        ok = ok && parse_arg_value(meta, arg);
                         break;
                     }
                     else
                     {
-                        success = parse_arg_value(meta, "");
+                        ok = parse_arg_value(meta, "");
                     }
                 }
                 else
                 {
-                    success = false;
+                    ok = false;
                 }
             }
-            cliopt_devf("short success=%d", success);
+            cliopt_devf("short ok=%d", ok);
         }
         else if (strcmp(full_arg, "--") == 0)
         {
@@ -398,14 +716,14 @@ bool cliopt_parse_args( //
 
                         // NOTE: This is sound because tail was split from cstr
                         assert(tail.ptr[tail.len] == '\0');
-                        success = parse_arg_value(meta, tail.ptr);
+                        ok = parse_arg_value(meta, tail.ptr);
                     }
                     else
                     {
                         // separate arg e.g. `--arg 123`
                         if (i < argc)
                         {
-                            success = parse_arg_value(meta, argv[i++]);
+                            ok = parse_arg_value(meta, argv[i++]);
                         }
                         else
                         {
@@ -414,21 +732,21 @@ bool cliopt_parse_args( //
                                 "-%c requires an argument",
                                 meta->spec.short_name
                             );
-                            success = false;
+                            ok = false;
                         }
                     }
                 }
                 else
                 {
-                    success = parse_arg_value(meta, "");
+                    ok = parse_arg_value(meta, "");
                 }
             }
             else
             {
-                success = false;
+                ok = false;
             }
 
-            cliopt_devf("long success=%d", success);
+            cliopt_devf("long ok=%d", ok);
         }
     }
 
@@ -439,7 +757,7 @@ bool cliopt_parse_args( //
 
         bool any_sufficient = false;
 
-        for (size_t i = 0; success && i < opts.len; ++i)
+        for (size_t i = 0; ok && i < opts.len; ++i)
         {
             struct cliopt_meta const *const meta = &opts.ptr[i];
 
@@ -453,7 +771,7 @@ bool cliopt_parse_args( //
 
         if (!any_sufficient)
         {
-            for (size_t i = 0; success && i < opts.len; ++i)
+            for (size_t i = 0; ok && i < opts.len; ++i)
             {
                 struct cliopt_meta const *const meta = &opts.ptr[i];
 
@@ -464,11 +782,16 @@ bool cliopt_parse_args( //
                         "Missing required argument '%s'",
                         meta->spec.name
                     );
-                    success = false;
+                    ok = false;
                 }
             }
         }
     }
 
-    return success;
+    if (!ok)
+    {
+        (void)cliopt_print_usage(opts, progopts);
+    }
+
+    return ok;
 }

@@ -45,14 +45,20 @@ bool sv_split_at_delims(
     {
         if (strchr(delims, s.ptr[i]))
         {
-            *head = (struct sv){
-                .ptr = s.ptr,
-                .len = i,
-            };
-            *tail = (struct sv){
-                .ptr = &s.ptr[i],
-                .len = s.len - i,
-            };
+            if (head)
+            {
+                *head = (struct sv){
+                    .ptr = s.ptr,
+                    .len = i,
+                };
+            }
+            if (tail)
+            {
+                *tail = (struct sv){
+                    .ptr = &s.ptr[i],
+                    .len = s.len - i,
+                };
+            }
 
             success = true;
 
@@ -60,8 +66,14 @@ bool sv_split_at_delims(
         }
     }
 
-    *head = s;
-    *tail = (struct sv){0};
+    if (head)
+    {
+        *head = s;
+    }
+    if (tail)
+    {
+        *tail = (struct sv){0};
+    }
 
 done:
     return success;
@@ -76,7 +88,7 @@ bool sv_split_delims(
 {
     bool const is_split = sv_split_at_delims(s, delims, head, tail);
 
-    if (is_split)
+    if (is_split && tail)
     {
         ++tail->ptr;
         --tail->len;
@@ -205,4 +217,18 @@ bool cstrbuf_extend_cstr(struct cstrbuf *const b, char const *const cstr)
 bool cstrbuf_extend_sv(struct cstrbuf *const b, struct sv const s)
 {
     return cstrbuf_extend_cstrn(b, s.ptr, s.len);
+}
+
+bool cstrbuf_reserve(struct cstrbuf *const b, size_t const n)
+{
+    bool const success = da_reserve(b, n + 1);
+
+    if (success)
+    {
+        memset(&b->ptr[b->len], 0, n + 1);
+    }
+
+    assert(b->ptr[b->len] == '\0');
+
+    return success;
 }

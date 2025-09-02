@@ -29,6 +29,8 @@ bool da_at_(
     void **const out
 )
 {
+    assert(*len == 0 || ptr);
+
     bool const success = i < *len;
 
     if (success)
@@ -47,6 +49,8 @@ bool da_reserve_(
     size_t const n
 )
 {
+    assert(*len == 0 && *cap == 0 || ptr);
+
     bool success;
 
     size_t const target_len = *len + n;
@@ -93,6 +97,8 @@ bool da_extend_uninit_(
     void **restrict const out_ptr
 )
 {
+    assert(*len == 0 && *cap == 0 || ptr);
+
     bool const success = da_reserve_(ptr, len, cap, elem_size, n);
 
     if (success)
@@ -114,6 +120,8 @@ bool da_extend_(
     size_t const n
 )
 {
+    assert(*len == 0 && *cap == 0 || ptr);
+
     void *extension;
     bool const success =
         da_extend_uninit_(ptr, len, cap, elem_size, n, &extension);

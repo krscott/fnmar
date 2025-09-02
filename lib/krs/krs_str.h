@@ -137,6 +137,24 @@ static inline nodiscard bool cstrbuf_extend_str(struct cstrbuf *b, struct str s)
 {
     return cstrbuf_extend_sv(b, sv_from_str(s));
 }
+nodiscard bool cstrbuf_reserve(struct cstrbuf *b, size_t n);
+
 void cstrbuf_debug_print(struct cstrbuf const b);
+
+#define cstrbuf_snprintf(out_success, buf, n, ...)                             \
+    do                                                                         \
+    {                                                                          \
+        bool *const success_ = (out_success);                                  \
+        struct cstrbuf *const b_ = (buf);                                      \
+        size_t n_ = n;                                                         \
+                                                                               \
+        *success_ = cstrbuf_reserve(b_, n_);                                   \
+        if (*success_)                                                         \
+        {                                                                      \
+            n_ = (size_t)snprintf(&b_->ptr[b_->len], n_, __VA_ARGS__);         \
+            b_->len += n_;                                                     \
+            assert(b_->ptr[b_->len] == '\0');                                  \
+        }                                                                      \
+    } while (0)
 
 #endif

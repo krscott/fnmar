@@ -23,6 +23,8 @@ static int fnmatch(char const *pattern, char const *string, int flags)
 #include <fnmatch.h>
 #endif
 
+#define DEFAULT_CONFIG_FILENAME "fnmar.txt"
+
 enum error
 {
     OK = 0,
@@ -37,8 +39,6 @@ static enum error out_of_memory(void)
     logf(LL_FATAL, "Out of memory");
     return ERR_OUT_OF_MEMORY;
 }
-
-static char const *const DEFAULT_CONFIG_FILENAME = "fnmar.txt";
 
 static enum error cstrbuf_init_from_file( //
     struct cstrbuf *const cstrbuf,
@@ -552,22 +552,6 @@ done:
     return err;
 }
 
-static void print_usage(void)
-{
-    printf("Usage: fnmar [-h] [-c configfile] file\n");
-}
-
-static void print_help(void)
-{
-    char const *const d_config = DEFAULT_CONFIG_FILENAME;
-
-    print_usage();
-    printf("\n");
-    printf("Options:\n");
-    printf("  -h, --help          Show help\n");
-    printf("  -c, --config FILE   Use config file (default: %s)\n", d_config);
-}
-
 #define CLI_FIELDS(F)                                                          \
                                                                                \
     F(xf_simple, char const *, filename)                                       \
@@ -576,14 +560,8 @@ static void print_help(void)
       char const *,                                                            \
       config_filename,                                                         \
       .name = "--config",                                                      \
-      .short_name = 'c')                                                       \
-                                                                               \
-    F(xf_simple_attr,                                                          \
-      bool,                                                                    \
-      help,                                                                    \
-      .name = "--help",                                                        \
-      .short_name = 'h',                                                       \
-      .sufficient = true)
+      .short_name = 'c',                                                       \
+      .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")")
 
 x_struct(cli, CLI_FIELDS);
 static cliopt_x_from_args_impl(cli, CLI_FIELDS);
@@ -598,16 +576,13 @@ int main(int const argc, char const *const *const argv)
         .config_filename = DEFAULT_CONFIG_FILENAME,
     };
 
-    if (!cli_from_args(&cli, argc, argv))
-    {
-        print_usage();
-        err = ERR_ARGS;
-        goto done;
-    }
+    struct cliopt_prog const progopts = {
+        .name = "fnmar",
+    };
 
-    if (cli.help)
+    if (!cli_from_args(&cli, argc, argv, progopts))
     {
-        print_help();
+        err = ERR_ARGS;
         goto done;
     }
 

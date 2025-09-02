@@ -42,7 +42,7 @@ add_compile_options(
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build")
 
-    add_compile_options(-fsanitize=undefined -fsanitize=address)
+    add_compile_options(-O0 -fsanitize=undefined -fsanitize=address)
     add_link_options(-fsanitize=undefined -fsanitize=address)
 else()
     message("Release build")
