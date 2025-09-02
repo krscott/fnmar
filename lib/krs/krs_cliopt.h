@@ -112,8 +112,8 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
         bool ok = cliopt_parse_args(opts, argc, argv, progopts);               \
         if (ok && help)                                                        \
         {                                                                      \
-            (void)cliopt_print_usage(opts, progopts);                          \
-            (void)cliopt_print_help(opts);                                     \
+            (void)!cliopt_print_usage(opts, progopts);                         \
+            (void)!cliopt_print_help(opts);                                    \
             exit(0);                                                           \
         }                                                                      \
         return ok;                                                             \

@@ -28,6 +28,11 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
         -Wno-padded
         -Wno-switch-default
         -Wno-used-but-marked-unused
+
+        -Werror=sometimes-uninitialized
+    )
+
+    add_compile_options(
     )
 else()
     add_compile_options(-Wall -Wextra -pedantic)
@@ -36,13 +41,12 @@ endif()
 add_compile_options(
     -Werror=unused-result
     -Werror=return-type
-    -Werror=sometimes-uninitialized
 )
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("Debug build")
 
-    add_compile_options(-O0 -fsanitize=undefined -fsanitize=address)
+    add_compile_options(-O1 -fsanitize=undefined -fsanitize=address)
     add_link_options(-fsanitize=undefined -fsanitize=address)
 else()
     message("Release build")

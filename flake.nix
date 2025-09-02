@@ -19,17 +19,16 @@
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        useClang = true;
-
         # Final derivation including any overrides made to output package
         finalDrv = self.packages.${system}.fnmar;
       in {
         packages = {
           fnmar = pkgs.callPackage ./. {
-            stdenv =
-              if useClang
-              then pkgs.clangStdenv
-              else pkgs.stdenv;
+            stdenv = pkgs.clangStdenv;
+          };
+
+          fnmar-gcc = finalDrv.override {
+            inherit (pkgs) stdenv;
           };
 
           fnmar-win = finalDrv.override {
@@ -50,11 +49,7 @@
             ];
 
             shellHook = ''
-              ${
-                if useClang
-                then "export CC=clang"
-                else ""
-              }
+              export CC=clang
 
               source dev_aliases.sh
               debug
