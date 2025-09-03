@@ -12,14 +12,14 @@ FNR==1 {
     sub(".*/", "", fname)  # remove Unix-style path
     sub(".*\\\\", "", fname)  # remove Windows-style path
 
-    header_guard = fname
-    sub("\\.[^.]*$", "", header_guard)  # remove extension
-    gsub(/[^[:alnum:]]+/, "_", header_guard)
-    sub(/^_+/, "", header_guard)
-    sub(/_+$/, "", header_guard)
-    header_guard = toupper(header_guard)
-    print "#ifndef XGEN_" header_guard "_H_"
-    print "#define XGEN_" header_guard "_H_"
+    fname_ident = fname
+    sub("\\.[^.]*$", "", fname_ident)  # remove extension
+    gsub(/[^[:alnum:]]+/, "_", fname_ident)
+    sub(/^_+/, "", fname_ident)
+    sub(/_+$/, "", fname_ident)
+    fname_ident = toupper(fname_ident)
+    print "#ifndef " fname_ident "_XGEN_H_"
+    print "#define " fname_ident "_XGEN_H_"
     print ""
     print "/* Generated based on " fname " */"
     print ""

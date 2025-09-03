@@ -3,7 +3,7 @@
 #include "krs_str.h"
 #include "krs_types.h"
 #include "krs_x.h"
-#include "xgen_main.h"
+#include "main_xgen.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -98,15 +98,11 @@ enum token_kind
 };
 static x_enum_to_cstr_impl(token_kind, xgen_token_kind);
 
-#define TOKEN_FIELDS(F)                                                        \
-    F(xf_enum, token_kind, kind)                                               \
-    F(xf_struct, str, str)
 struct token
 {
     enum token_kind kind;
     struct str str;
 };
-// static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
 
 static enum token_kind get_delim_kind(char const c)
 {

@@ -1,5 +1,5 @@
-#ifndef XGEN_MAIN_H_
-#define XGEN_MAIN_H_
+#ifndef MAIN_XGEN_H_
+#define MAIN_XGEN_H_
 
 /* Generated based on main.c */
 
