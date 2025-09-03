@@ -3,6 +3,7 @@
 #include "krs_str.h"
 #include "krs_types.h"
 #include "krs_x.h"
+#include "xgen_main.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -84,21 +85,27 @@ done:
     return err;
 }
 
-#define TOKEN_KINDS(X)                                                         \
-    X(TOK_NONE)                                                                \
-    X(TOK_COMMENT)                                                             \
-    X(TOK_PATTERN)                                                             \
-    X(TOK_SEMI)                                                                \
-    X(TOK_COLON)                                                               \
-    X(TOK_CMD)                                                                 \
-    X(TOK_EOF)
-x_enum(token_kind, TOKEN_KINDS);
-static x_enum_to_cstr_impl(token_kind, TOKEN_KINDS);
+/* #xgen */
+enum token_kind
+{
+    TOK_NONE,
+    TOK_COMMENT,
+    TOK_PATTERN,
+    TOK_SEMI,
+    TOK_COLON,
+    TOK_CMD,
+    TOK_EOF,
+};
+static x_enum_to_cstr_impl(token_kind, xgen_token_kind);
 
 #define TOKEN_FIELDS(F)                                                        \
     F(xf_enum, token_kind, kind)                                               \
     F(xf_struct, str, str)
-x_struct(token, TOKEN_FIELDS);
+struct token
+{
+    enum token_kind kind;
+    struct str str;
+};
 // static xstruct_impl_fprint_repr(token, TOKEN_FIELDS);
 
 static enum token_kind get_delim_kind(char const c)
@@ -276,13 +283,15 @@ static struct file_pos find_file_pos( //
     return pos;
 }
 
-#define PARSER_STATES(X)                                                       \
-    X(PS_LINE_START)                                                           \
-    X(PS_PATTERN)                                                              \
-    X(PS_PATTERN_DELIM)                                                        \
-    X(PS_COMMAND)
-x_enum(parser_state, PARSER_STATES);
-static x_enum_to_cstr_impl(parser_state, PARSER_STATES);
+/* #xgen */
+enum parser_state
+{
+    PS_LINE_START,
+    PS_PATTERN,
+    PS_PATTERN_DELIM,
+    PS_COMMAND,
+};
+static x_enum_to_cstr_impl(parser_state, xgen_parser_state);
 
 struct fnmar_parser
 {
