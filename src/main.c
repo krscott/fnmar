@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Suppress false unused header
+#ifndef MAIN_XGEN_H_
+#endif
+
 #ifdef _WIN32
 #include <shlwapi.h>
 
