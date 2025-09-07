@@ -46,4 +46,6 @@
         FIELDS_X(X_STRUCT_FIELD)                                               \
     }
 
+#define x_attr(name, ...) static_assert(sizeof((struct name){__VA_ARGS__}), "")
+
 #endif

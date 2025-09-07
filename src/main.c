@@ -100,7 +100,7 @@ enum token_kind
     TOK_CMD,
     TOK_EOF,
 };
-static x_enum_to_cstr_impl(token_kind, xgen_token_kind);
+static x_enum_to_cstr_impl(token_kind, token_kind_x_variants);
 
 struct token
 {
@@ -291,7 +291,7 @@ enum parser_state
     PS_PATTERN_DELIM,
     PS_COMMAND,
 };
-static x_enum_to_cstr_impl(parser_state, xgen_parser_state);
+static x_enum_to_cstr_impl(parser_state, parser_state_x_variants);
 
 struct fnmar_parser
 {
@@ -561,19 +561,20 @@ done:
     return err;
 }
 
-#define CLI_FIELDS(F)                                                          \
-                                                                               \
-    F(xf_simple, char const *, filename)                                       \
-                                                                               \
-    F(xf_simple_attr,                                                          \
-      char const *,                                                            \
-      config_filename,                                                         \
-      .name = "--config",                                                      \
-      .short_name = 'c',                                                       \
-      .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")")
+// #xgen
+struct cli
+{
+    char const *filename;
 
-x_struct(cli, CLI_FIELDS);
-static cliopt_x_from_args_impl(cli, CLI_FIELDS);
+    x_attr(
+        cliopt_spec,
+        .name = "--config",
+        .short_name = 'c',
+        .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"
+    );
+    char const *config_filename;
+};
+static cliopt_x_from_args_impl(cli, cli_x_cliopt_spec_fields);
 
 int main(int const argc, char const *const *const argv)
 {
