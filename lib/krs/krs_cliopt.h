@@ -14,7 +14,7 @@ enum cliopt_kind
     CLIOPT_INT,
 };
 
-struct cliopt_spec
+struct cliopt_attr
 {
     char const *name;
     char const *argname;
@@ -26,7 +26,7 @@ struct cliopt_spec
 
 struct cliopt_meta
 {
-    struct cliopt_spec spec;
+    struct cliopt_attr spec;
     enum cliopt_kind kind;
     char const *ident_name;
     void *output;
@@ -59,7 +59,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
 #define CLIOPT_X_FIELD_xf_simple_attr(type, varname, ...)                      \
     ((struct cliopt_meta){                                                     \
         .spec =                                                                \
-            (struct cliopt_spec){                                              \
+            (struct cliopt_attr){                                              \
                 __VA_ARGS__,                                                   \
             },                                                                 \
         .kind = _Generic(                                                      \
@@ -91,7 +91,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
         struct cliopt_meta opts_arr[] = {                                      \
             ((struct cliopt_meta){                                             \
                 .spec =                                                        \
-                    (struct cliopt_spec){                                      \
+                    (struct cliopt_attr){                                      \
                         .name = "--help",                                      \
                         .short_name = 'h',                                     \
                         .sufficient = true,                                    \
@@ -101,7 +101,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
                 .ident_name = "help",                                          \
                 .output = &help,                                               \
             }),                                                                \
-            tname##_x_cliopt_spec_fields(CLIOPT_X_FIELD)                       \
+            tname##_x_cliopt_attr_fields(CLIOPT_X_FIELD)                       \
         };                                                                     \
                                                                                \
         struct cliopt_options opts = {                                         \

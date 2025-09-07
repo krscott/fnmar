@@ -567,7 +567,7 @@ struct cli
     char const *filename;
 
     x_attr(
-        cliopt_spec,
+        cliopt_attr,
         .name = "--config",
         .short_name = 'c',
         .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"

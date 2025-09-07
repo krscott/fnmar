@@ -42,7 +42,7 @@
 //     char const *filename;
 //
 //     x_attr(
-//         cliopt_spec,
+//         cliopt_attr,
 //         .name = "--config",
 //         .short_name = 'c',
 //         .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"
@@ -52,7 +52,7 @@
 #define cli_x_fields(F)                                                        \
     F(xf_simple, char const *, filename)                                       \
     F(xf_simple, char const *, config_filename)
-#define cli_x_cliopt_spec_fields(F)                                            \
+#define cli_x_cliopt_attr_fields(F)                                            \
     F(xf_simple, char const *, filename)                                       \
     F(xf_simple_attr,                                                          \
       char const *,                                                            \
