@@ -89,7 +89,7 @@ done:
     return err;
 }
 
-// #xgen
+xgen();
 enum token_kind
 {
     TOK_NONE,
@@ -283,7 +283,7 @@ static struct file_pos find_file_pos( //
     return pos;
 }
 
-// #xgen
+xgen();
 enum parser_state
 {
     PS_LINE_START,
@@ -561,12 +561,12 @@ done:
     return err;
 }
 
-// #xgen
+xgen();
 struct cli
 {
     char const *filename;
 
-    x_attr(
+    xattr(
         cliopt_attr,
         .name = "--config",
         .short_name = 'c',

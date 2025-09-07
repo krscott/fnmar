@@ -45,6 +45,9 @@
         FIELDS_X(X_STRUCT_FIELD)                                               \
     }
 
-#define x_attr(name, ...) static_assert(sizeof((struct name){__VA_ARGS__}), "")
+// xgen markers
+
+#define xgen() static_assert(1, "")
+#define xattr(name, ...) static_assert(sizeof((struct name){__VA_ARGS__}), "")
 
 #endif

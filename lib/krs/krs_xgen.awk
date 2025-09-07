@@ -34,7 +34,7 @@ END {
     print "#endif"
 }
 
-state == IDLE && (/^\/\* #xgen([[:space:]].*)?$/ || /^\/\/ #xgen([[:space:]].*)?$/) {
+state == IDLE && (/^xgen\(\);$/) {
     state = FIND_DEF
     structure = ""
     name = ""
@@ -56,7 +56,7 @@ state == CURLY && /{/ {
     field_attr[""][0] = ""
 }
 
-state == FIELDS && structure == "struct" && /^[[:space:]]*x_attr[[:space:]]*\($/ {
+state == FIELDS && structure == "struct" && /^[[:space:]]*xattr[[:space:]]*\($/ {
     attr_state = ATTR_COLLECT
     attr_str = ""
 }
@@ -65,7 +65,7 @@ state == FIELDS && attr_state == ATTR_COLLECT {
 }
 state == FIELDS && attr_state == ATTR_COLLECT && /\);/ {
     attr_state = ATTR_INIT
-    if (match(attr_str, /^[[:space:]]*x_attr[[:space:]]*\([[:space:]]*([[:alnum:]_]+),[[:space:]]*(.*)\);$/, m)) {
+    if (match(attr_str, /^[[:space:]]*xattr[[:space:]]*\([[:space:]]*([[:alnum:]_]+),[[:space:]]*(.*)\);$/, m)) {
         field_attr[m[1]][field_idx] = m[2]
     }
     next

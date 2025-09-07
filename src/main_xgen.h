@@ -41,7 +41,7 @@
 // {
 //     char const *filename;
 //
-//     x_attr(
+//     xattr(
 //         cliopt_attr,
 //         .name = "--config",
 //         .short_name = 'c',
