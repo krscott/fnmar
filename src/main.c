@@ -89,7 +89,7 @@ done:
     return err;
 }
 
-/* #xgen */
+// #xgen
 enum token_kind
 {
     TOK_NONE,
@@ -100,7 +100,7 @@ enum token_kind
     TOK_CMD,
     TOK_EOF,
 };
-static x_enum_to_cstr_impl(token_kind, token_kind_x_variants);
+static x_enum_to_cstr_impl(token_kind);
 
 struct token
 {
@@ -283,7 +283,7 @@ static struct file_pos find_file_pos( //
     return pos;
 }
 
-/* #xgen */
+// #xgen
 enum parser_state
 {
     PS_LINE_START,
@@ -291,7 +291,7 @@ enum parser_state
     PS_PATTERN_DELIM,
     PS_COMMAND,
 };
-static x_enum_to_cstr_impl(parser_state, parser_state_x_variants);
+static x_enum_to_cstr_impl(parser_state);
 
 struct fnmar_parser
 {

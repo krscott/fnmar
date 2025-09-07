@@ -16,14 +16,13 @@
         return #x;
 #define x_enum_to_cstr_decl(name)                                              \
     char const *name##_to_cstr(enum name const val)
-#define x_enum_to_cstr_impl(name, KINDS_X)                                     \
+#define x_enum_to_cstr_impl(name)                                              \
     x_enum_to_cstr_decl(name)                                                  \
     {                                                                          \
         switch (val)                                                           \
         {                                                                      \
-            KINDS_X(X_CASE_TO_CSTR)                                            \
-        default:                                                               \
-            assert(false && "Invalid enum " #name " value");                   \
+            name##_x_variants(X_CASE_TO_CSTR) default                          \
+                : assert(false && "Invalid enum " #name " value");             \
             return "?";                                                        \
         }                                                                      \
     }                                                                          \
