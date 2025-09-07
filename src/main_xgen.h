@@ -14,13 +14,13 @@
 //     TOK_EOF,
 // };
 #define token_kind_x_count 7
-#define token_kind_x_variants(X) \
-    X(TOK_NONE) \
-    X(TOK_COMMENT) \
-    X(TOK_PATTERN) \
-    X(TOK_SEMI) \
-    X(TOK_COLON) \
-    X(TOK_CMD) \
+#define token_kind_x_variants(X)                                               \
+    X(TOK_NONE)                                                                \
+    X(TOK_COMMENT)                                                             \
+    X(TOK_PATTERN)                                                             \
+    X(TOK_SEMI)                                                                \
+    X(TOK_COLON)                                                               \
+    X(TOK_CMD)                                                                 \
     X(TOK_EOF)
 
 // enum parser_state
@@ -31,16 +31,16 @@
 //     PS_COMMAND,
 // };
 #define parser_state_x_count 4
-#define parser_state_x_variants(X) \
-    X(PS_LINE_START) \
-    X(PS_PATTERN) \
-    X(PS_PATTERN_DELIM) \
+#define parser_state_x_variants(X)                                             \
+    X(PS_LINE_START)                                                           \
+    X(PS_PATTERN)                                                              \
+    X(PS_PATTERN_DELIM)                                                        \
     X(PS_COMMAND)
 
 // struct cli
 // {
 //     char const *filename;
-// 
+//
 //     x_attr(
 //         cliopt_spec,
 //         .name = "--config",
@@ -49,11 +49,16 @@
 //     );
 //     char const *config_filename;
 // };
-#define cli_x_fields(F) \
-    F(xf_simple, char const *, filename) \
+#define cli_x_fields(F)                                                        \
+    F(xf_simple, char const *, filename)                                       \
     F(xf_simple, char const *, config_filename)
-#define cli_x_cliopt_spec_fields(F) \
-    F(xf_simple, char const *, filename) \
-    F(xf_simple_attr, char const *, config_filename, .name = "--config",        .short_name = 'c',        .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"    )
+#define cli_x_cliopt_spec_fields(F)                                            \
+    F(xf_simple, char const *, filename)                                       \
+    F(xf_simple_attr,                                                          \
+      char const *,                                                            \
+      config_filename,                                                         \
+      .name = "--config",                                                      \
+      .short_name = 'c',                                                       \
+      .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")")
 
 #endif
