@@ -83,7 +83,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
         char const *const *argv,                                               \
         struct cliopt_prog progopts                                            \
     )
-#define cliopt_x_from_args_impl(tname, FIELDS_X)                               \
+#define cliopt_x_from_args_impl(tname)                                         \
     cliopt_x_from_args_decl(tname)                                             \
     {                                                                          \
         bool help = false;                                                     \
@@ -101,7 +101,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
                 .ident_name = "help",                                          \
                 .output = &help,                                               \
             }),                                                                \
-            FIELDS_X(CLIOPT_X_FIELD)                                           \
+            tname##_x_cliopt_spec_fields(CLIOPT_X_FIELD)                       \
         };                                                                     \
                                                                                \
         struct cliopt_options opts = {                                         \

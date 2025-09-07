@@ -574,7 +574,7 @@ struct cli
     );
     char const *config_filename;
 };
-static cliopt_x_from_args_impl(cli, cli_x_cliopt_spec_fields);
+static cliopt_x_from_args_impl(cli);
 
 int main(int const argc, char const *const *const argv)
 {

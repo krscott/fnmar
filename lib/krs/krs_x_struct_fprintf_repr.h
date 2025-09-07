@@ -57,12 +57,11 @@
 
 #define x_struct_fprint_repr_decl(name)                                        \
     void name##_fprint_repr(FILE *stream, struct name const *x)
-#define x_struct_fprint_repr_impl(name, FIELDS_X)                              \
+#define x_struct_fprint_repr_impl(name)                                        \
     x_struct_fprint_repr_decl(name)                                            \
     {                                                                          \
         fprintf(stream, "(struct " #name "){ ");                               \
-        FIELDS_X(X_STRUCT_FPRINT_REPR)                                         \
-        fprintf(stream, "}");                                                  \
+        name##_x_fields(X_STRUCT_FPRINT_REPR) fprintf(stream, "}");            \
     }                                                                          \
     static_assert(1, "")
 
