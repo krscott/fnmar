@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define cliopt_devf(...) logf(LL_DEV, "cliopt " __VA_ARGS__)
+// #define cliopt_devf(...) klog(LL_DEV, "cliopt " __VA_ARGS__)
 #ifndef cliopt_devf
 #define cliopt_devf(...)
 #endif
@@ -84,12 +84,12 @@ static nodiscard bool parse_arg_value( //
 
         if (errno)
         {
-            logf(LL_ERROR, "%s: %s", strerror(errno), arg);
+            klog(LL_ERROR, "%s: %s", strerror(errno), arg);
             ok = false;
         }
         else if (*tail != '\0')
         {
-            logf(LL_ERROR, "Not an integer: %s", arg);
+            klog(LL_ERROR, "Not an integer: %s", arg);
             ok = false;
         }
         else
@@ -131,7 +131,7 @@ static bool nodiscard get_next_positional( //
 
     if (!ok)
     {
-        logf(LL_ERROR, "Too many positional arguments");
+        klog(LL_ERROR, "Too many positional arguments");
     }
     return ok;
 }
@@ -158,11 +158,11 @@ static bool get_short( //
 
     if (!ok)
     {
-        logf(LL_ERROR, "Unrecognized option '-%c'", short_name);
+        klog(LL_ERROR, "Unrecognized option '-%c'", short_name);
     }
     else if ((*out)->used)
     {
-        logf(LL_ERROR, "Option '-%c' already used", short_name);
+        klog(LL_ERROR, "Option '-%c' already used", short_name);
         ok = false;
     }
 
@@ -192,7 +192,7 @@ static bool get_long( //
 
     if (!ok)
     {
-        logf(
+        klog(
             LL_ERROR,
             "Unrecognized option '%.*s'",
             str_format_args(long_name)
@@ -200,7 +200,7 @@ static bool get_long( //
     }
     else if ((*out)->used)
     {
-        logf(
+        klog(
             LL_ERROR,
             "Option '%.*s' already used",
             str_format_args(long_name)
@@ -558,7 +558,7 @@ bool cliopt_parse_args( //
 
         if (!meta->spec.name && !meta->spec.short_name)
         {
-            logf(
+            klog(
                 LL_FATAL,
                 "Option must define at least one of 'name', 'short_name', "
                 "or define meta 'ident_name'"
@@ -574,13 +574,13 @@ bool cliopt_parse_args( //
 
         if (meta->kind == CLIOPT_NONE)
         {
-            logf(LL_FATAL, "Option '%s' has no kind set", opt_name);
+            klog(LL_FATAL, "Option '%s' has no kind set", opt_name);
             assert(false);
         }
 
         if (!meta->output)
         {
-            logf(LL_FATAL, "Option '%s' output ptr is NULL", opt_name);
+            klog(LL_FATAL, "Option '%s' output ptr is NULL", opt_name);
             assert(false);
         }
 
@@ -589,7 +589,7 @@ bool cliopt_parse_args( //
             // If an arg has a short flag, it must not use a positional name
             if (!is_long_arg(&meta->spec))
             {
-                logf(
+                klog(
                     LL_FATAL,
                     "Short option '-%c' with positional name '%s' (change to "
                     "'--%s')",
@@ -653,7 +653,7 @@ bool cliopt_parse_args( //
                             }
                             else
                             {
-                                logf(
+                                klog(
                                     LL_ERROR,
                                     "-%c requires an argument",
                                     meta->spec.short_name
@@ -727,7 +727,7 @@ bool cliopt_parse_args( //
                         }
                         else
                         {
-                            logf(
+                            klog(
                                 LL_ERROR,
                                 "-%c requires an argument",
                                 meta->spec.short_name
@@ -777,7 +777,7 @@ bool cliopt_parse_args( //
 
                 if (meta->spec.required && !meta->used)
                 {
-                    logf(
+                    klog(
                         LL_ERROR,
                         "Missing required argument '%s'",
                         meta->spec.name

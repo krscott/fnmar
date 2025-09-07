@@ -41,7 +41,7 @@ enum error
 
 static enum error out_of_memory(void)
 {
-    logf(LL_FATAL, "Out of memory");
+    klog(LL_FATAL, "Out of memory");
     return ERR_OUT_OF_MEMORY;
 }
 
@@ -337,7 +337,7 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
             break;
         }
 
-        logf(
+        klog(
             LL_DEBUG,
             "%-19s %-15s %.*s",
             parser_state_to_cstr(parser->state),
@@ -430,13 +430,13 @@ static void fnmar_parser_next(struct fnmar_parser *const parser)
     {
         if (parser->token.kind == TOK_EOF)
         {
-            logf(LL_ERROR, "Unexpected end of file");
+            klog(LL_ERROR, "Unexpected end of file");
         }
         else
         {
             struct file_pos pos =
                 find_file_pos(parser->full_text, parser->tail.ptr);
-            logf(
+            klog(
                 LL_ERROR,
                 "Unexpected token at line %u col %u: '%.*s'",
                 pos.line + 1,
@@ -485,12 +485,12 @@ static enum error format_and_run( //
 
     // Run
 
-    logf(LL_INFO, "Running: %s", cmd.ptr);
+    klog(LL_INFO, "Running: %s", cmd.ptr);
     int exitcode = system(cmd.ptr);
 
     if (exitcode != 0)
     {
-        logf(LL_WARN, "Command non-zero exit code: %d", exitcode);
+        klog(LL_WARN, "Command non-zero exit code: %d", exitcode);
     }
 
 done:
@@ -531,11 +531,11 @@ static enum error evaluate( //
 
             if (found_match)
             {
-                logf(LL_DEBUG, "'%s' matched pattern '%s'", filename, pattern);
+                klog(LL_DEBUG, "'%s' matched pattern '%s'", filename, pattern);
             }
             else
             {
-                logf(
+                klog(
                     LL_DEBUG,
                     "'%s' did not match pattern '%s'",
                     filename,
@@ -553,7 +553,7 @@ static enum error evaluate( //
         }
     }
 
-    logf(LL_WARN, "Did not find pattern match for '%s'", filename);
+    klog(LL_WARN, "Did not find pattern match for '%s'", filename);
     err = ERR_NO_MATCHES;
 
 done:

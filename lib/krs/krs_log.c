@@ -65,7 +65,7 @@ void log_setup_from_env(void)
         }
         else
         {
-            logf(LL_ERROR, "Unknown log level " LOG_ENV_VAR "=%s", log_env);
+            klog(LL_ERROR, "Unknown log level " LOG_ENV_VAR "=%s", log_env);
         }
     }
 }

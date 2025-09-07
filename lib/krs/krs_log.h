@@ -14,7 +14,7 @@ enum log_level
     LL_DEBUG
 };
 
-#define logf(level, ...)                                                       \
+#define klog(level, ...)                                                       \
     do                                                                         \
     {                                                                          \
         if (level <= log_level_printed)                                        \
