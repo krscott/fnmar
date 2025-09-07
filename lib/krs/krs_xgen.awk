@@ -52,6 +52,7 @@ state > FIND_DEF {print "// " $0}
 state == CURLY && /{/ {
     state = FIELDS
     attr_state = ATTR_INIT
+    split("", field_arr)
     field_attr[""][0] = ""
 }
 
