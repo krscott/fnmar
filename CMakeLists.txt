@@ -60,9 +60,5 @@ endif()
 add_subdirectory(lib/krs)
 add_subdirectory(src)
 
-if (WIN32)
-    install(TARGETS ${PROJECT_NAME})
-else()
-    install(TARGETS ${PROJECT_NAME})
-endif()
+install(TARGETS ${PROJECT_NAME})
 
