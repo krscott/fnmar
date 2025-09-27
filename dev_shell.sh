@@ -1,17 +1,3 @@
-xgen() {
-    (
-        set -eu
-
-        tmpfile=$(mktemp)
-
-        ./lib/krs/krs_xgen.awk src/main.c | clang-format >"$tmpfile"
-
-        if ! diff -q "$tmpfile" src/main_xgen.h; then
-            mv "$tmpfile" src/main_xgen.h
-        fi
-    )
-}
-
 cfg() {
     (
         set -eu
@@ -22,8 +8,6 @@ cfg() {
 }
 
 bld() {
-    xgen
-
     (
         set -eu
 
