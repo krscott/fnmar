@@ -35,12 +35,12 @@ static nodiscard bool expects_arg(struct cliopt_meta const *meta)
     return out;
 }
 
-static nodiscard bool is_positional_arg(struct cliopt_attr const *const opt)
+static nodiscard bool is_positional_arg(struct cliopt const *const opt)
 {
     return opt->name && (opt->name[0] != '-') && (opt->short_name == '\0');
 }
 
-static nodiscard bool is_long_arg(struct cliopt_attr const *const opt)
+static nodiscard bool is_long_arg(struct cliopt const *const opt)
 {
     return opt->name && (opt->name[0] == '-') && (opt->name[1] == '-') &&
            (opt->name[2] != '\0');
@@ -241,7 +241,7 @@ bool cliopt_print_usage(
 
     for (size_t i = 0; i < opts.len; ++i)
     {
-        struct cliopt_attr const spec = opts.ptr[i].spec;
+        struct cliopt const spec = opts.ptr[i].spec;
         bool const has_arg = expects_arg(&opts.ptr[i]);
 
         if (is_positional_arg(&spec))
@@ -323,7 +323,7 @@ bool cliopt_print_help(struct cliopt_options const opts)
 
     for (size_t i = 0; i < opts.len; ++i)
     {
-        struct cliopt_attr const spec = opts.ptr[i].spec;
+        struct cliopt const spec = opts.ptr[i].spec;
         bool const has_arg = expects_arg(&opts.ptr[i]);
 
         if (is_positional_arg(&spec))

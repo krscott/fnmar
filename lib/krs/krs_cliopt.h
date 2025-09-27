@@ -15,7 +15,7 @@ enum cliopt_kind
     CLIOPT_INT,
 };
 
-struct cliopt_attr
+struct cliopt
 {
     char const *name;
     char const *argname;
@@ -27,7 +27,7 @@ struct cliopt_attr
 
 struct cliopt_meta
 {
-    struct cliopt_attr spec;
+    struct cliopt spec;
     enum cliopt_kind kind;
     char const *ident_name;
     void *output;
@@ -59,10 +59,10 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
 
 prexy_tag(cliopt_from_args);
 
-#define CLIOPT_FROM_ARGS_cliopt_attr(type, varname, ...)                       \
+#define CLIOPT_FROM_ARGS_cliopt(type, varname, ...)                            \
     ((struct cliopt_meta){                                                     \
         .spec =                                                                \
-            (struct cliopt_attr){                                              \
+            (struct cliopt){                                                   \
                 __VA_ARGS__,                                                   \
             },                                                                 \
         .kind = _Generic(                                                      \
@@ -75,7 +75,7 @@ prexy_tag(cliopt_from_args);
         .output = &cli_data->varname,                                          \
     })
 #define CLIOPT_FROM_ARGS_simple(type, varname)                                 \
-    CLIOPT_FROM_ARGS_cliopt_attr(type, varname, 0)
+    CLIOPT_FROM_ARGS_cliopt(type, varname, 0)
 
 #define CLIOPT_FROM_ARGS_SELECT(fkind, ...)                                    \
     CLIOPT_FROM_ARGS_##fkind(__VA_ARGS__),
@@ -95,7 +95,7 @@ prexy_tag(cliopt_from_args);
         struct cliopt_meta opts_arr[] = {                                      \
             ((struct cliopt_meta){                                             \
                 .spec =                                                        \
-                    (struct cliopt_attr){                                      \
+                    (struct cliopt){                                           \
                         .name = "--help",                                      \
                         .short_name = 'h',                                     \
                         .sufficient = true,                                    \

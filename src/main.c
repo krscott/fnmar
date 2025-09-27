@@ -558,7 +558,7 @@ prexy struct cli
     char const *filename;
 
     px_attr(
-        cliopt_attr,
+        cliopt,
         .name = "--config",
         .short_name = 'c',
         .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"
@@ -566,14 +566,14 @@ prexy struct cli
     char const *config_filename;
 
     px_attr(
-        cliopt_attr,
+        cliopt,
         .name = "--verbose",
         .short_name = 'v',
         .help = "Print debug messages"
     );
     bool verbose;
 };
-static prexy_impl_attr(cli, cliopt_from_args, cliopt_attr);
+static prexy_impl_attr(cli, cliopt_from_args, cliopt);
 
 int main(int const argc, char const *const *const argv)
 {
