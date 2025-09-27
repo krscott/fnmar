@@ -17,7 +17,7 @@ cmake --build build
 
 Useful development shell aliases
 ```
-source dev_aliases.sh
+source dev_shell.sh
 
 # Reconfigure cmake
 cfg

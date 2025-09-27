@@ -89,3 +89,12 @@ setup_vscode() {
     mkdir -p .vscode/
     cp dev/vscode/* .vscode/
 }
+
+# Check "$1" is not a file because direnv will pass a profile when sourced
+if [ $# -gt 0 ] && [ ! -e "$1" ]; then
+    "$@"
+    exit $?
+fi
+
+export CC=clang
+debug

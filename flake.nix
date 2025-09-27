@@ -49,10 +49,7 @@
             ];
 
             shellHook = ''
-              export CC=clang
-
               source dev_aliases.sh
-              debug
             '';
           };
         };
