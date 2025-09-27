@@ -15,9 +15,11 @@ target_sources(krslib PRIVATE
 # Generate prexy.h
 
 add_custom_command(
-    OUTPUT prexy.h
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/prexy.h
     COMMAND prexy --header > ${CMAKE_CURRENT_SOURCE_DIR}/prexy.h
+    DEPENDS prexy
+    COMMENT "Generating prexy.h"
     VERBATIM
 )
-target_sources(krslib PRIVATE prexy.h)
 
+target_sources(krslib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/prexy.h)
