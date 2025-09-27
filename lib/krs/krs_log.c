@@ -7,6 +7,11 @@
 
 enum log_level log_level_printed = LL_WARN;
 
+void log_set_level(enum log_level const ll)
+{ //
+    log_level_printed = ll;
+}
+
 char const *log_level_to_cstr(enum log_level const ll)
 {
     char const *s;

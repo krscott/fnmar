@@ -28,6 +28,8 @@ enum log_level
 nodiscard char const *log_level_to_cstr(enum log_level const ll);
 void log_setup_from_env(void);
 
+void log_set_level(enum log_level const ll);
+
 extern enum log_level log_level_printed;
 
 #endif

@@ -564,6 +564,14 @@ prexy struct cli
         .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"
     );
     char const *config_filename;
+
+    px_attr(
+        cliopt_attr,
+        .name = "--verbose",
+        .short_name = 'v',
+        .help = "Print debug messages"
+    );
+    bool verbose;
 };
 static prexy_impl_attr(cli, cliopt_from_args, cliopt_attr);
 
@@ -585,6 +593,11 @@ int main(int const argc, char const *const *const argv)
     {
         err = ERR_ARGS;
         goto done;
+    }
+
+    if (cli.verbose)
+    {
+        log_set_level(LL_DEBUG);
     }
 
     err = evaluate(cli.filename, cli.config_filename);

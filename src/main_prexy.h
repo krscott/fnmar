@@ -48,10 +48,19 @@
 //         .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")"
 //     );
 //     char const *config_filename;
+//
+//     px_attr(
+//         cliopt_attr,
+//         .name = "--verbose",
+//         .short_name = 'v',
+//         .help = "Print debug messages"
+//     );
+//     bool verbose;
 // };
 #define cli_X(F)                                                               \
     F(simple, char const *, filename)                                          \
-    F(simple, char const *, config_filename)
+    F(simple, char const *, config_filename)                                   \
+    F(simple, bool, verbose)
 
 #define cli_X_cliopt_attr(F)                                                   \
     F(simple, char const *, filename)                                          \
@@ -60,6 +69,12 @@
       config_filename,                                                         \
       .name = "--config",                                                      \
       .short_name = 'c',                                                       \
-      .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")")
+      .help = "Config file (default: " DEFAULT_CONFIG_FILENAME ")")            \
+    F(cliopt_attr,                                                             \
+      bool,                                                                    \
+      verbose,                                                                 \
+      .name = "--verbose",                                                     \
+      .short_name = 'v',                                                       \
+      .help = "Print debug messages")
 
 #endif
