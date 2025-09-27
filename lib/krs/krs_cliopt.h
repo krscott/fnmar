@@ -2,7 +2,6 @@
 #define KRS_CLIOPT_H_
 
 #include "krs_cc_ext.h"
-#include "krs_x.h"
 #include "prexy.h"
 #include <stdbool.h>
 #include <stddef.h>

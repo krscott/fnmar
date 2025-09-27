@@ -1,6 +1,7 @@
 #include "krs_cliopt.h"
 #include "krs_log.h"
 #include "krs_str.h"
+#include "krs_to_cstr.h"
 #include "krs_types.h"
 #include "main_prexy.h"
 #include "prexy.h"
@@ -94,7 +95,7 @@ prexy enum token_kind {
     TOK_CMD,
     TOK_EOF,
 };
-static prexy_impl(token_kind, x_enum_to_cstr);
+static prexy_impl(token_kind, to_cstr);
 
 struct token
 {
@@ -283,7 +284,7 @@ prexy enum parser_state {
     PS_PATTERN_DELIM,
     PS_COMMAND,
 };
-static prexy_impl(parser_state, x_enum_to_cstr);
+static prexy_impl(parser_state, to_cstr);
 
 struct fnmar_parser
 {
