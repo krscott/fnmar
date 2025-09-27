@@ -3,6 +3,7 @@
 
 #include "krs_cc_ext.h"
 #include "krs_x.h"
+#include "prexy.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -56,7 +57,9 @@ nodiscard bool cliopt_print_usage( //
 );
 nodiscard bool cliopt_print_help(struct cliopt_options opts);
 
-#define CLIOPT_X_FIELD_xf_simple_attr(type, varname, ...)                      \
+prexy_tag(cliopt_from_args);
+
+#define CLIOPT_FROM_ARGS_cliopt_attr(type, varname, ...)                       \
     ((struct cliopt_meta){                                                     \
         .spec =                                                                \
             (struct cliopt_attr){                                              \
@@ -71,20 +74,21 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
         .ident_name = #varname,                                                \
         .output = &cli_data->varname,                                          \
     })
-#define CLIOPT_X_FIELD_xf_simple(type, varname)                                \
-    CLIOPT_X_FIELD_xf_simple_attr(type, varname, 0)
+#define CLIOPT_FROM_ARGS_simple(type, varname)                                 \
+    CLIOPT_FROM_ARGS_cliopt_attr(type, varname, 0)
 
-#define CLIOPT_X_FIELD(fkind, ...) CLIOPT_X_FIELD_##fkind(__VA_ARGS__),
+#define CLIOPT_FROM_ARGS_SELECT(fkind, ...)                                    \
+    CLIOPT_FROM_ARGS_##fkind(__VA_ARGS__),
 
-#define cliopt_x_from_args_decl(tname)                                         \
+#define cliopt_from_args_decl(tname)                                           \
     nodiscard bool tname##_from_args(                                          \
         struct tname *cli_data,                                                \
         int argc,                                                              \
         char const *const *argv,                                               \
         struct cliopt_prog progopts                                            \
     )
-#define cliopt_x_from_args_impl(tname)                                         \
-    cliopt_x_from_args_decl(tname)                                             \
+#define cliopt_from_args_impl(tname, X)                                        \
+    cliopt_from_args_decl(tname)                                               \
     {                                                                          \
         bool help = false;                                                     \
                                                                                \
@@ -101,7 +105,7 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
                 .ident_name = "help",                                          \
                 .output = &help,                                               \
             }),                                                                \
-            tname##_x_cliopt_attr_fields(CLIOPT_X_FIELD)                       \
+            X(CLIOPT_FROM_ARGS_SELECT)                                         \
         };                                                                     \
                                                                                \
         struct cliopt_options opts = {                                         \
@@ -117,7 +121,6 @@ nodiscard bool cliopt_print_help(struct cliopt_options opts);
             exit(0);                                                           \
         }                                                                      \
         return ok;                                                             \
-    }                                                                          \
-    static_assert(1, "")
+    }
 
 #endif

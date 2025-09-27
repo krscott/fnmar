@@ -2,18 +2,14 @@
 #include "krs_log.h"
 #include "krs_str.h"
 #include "krs_types.h"
-#include "krs_x.h"
-#include "main_xgen.h"
+#include "main_prexy.h"
+#include "prexy.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
-// Suppress false unused header
-#ifndef MAIN_XGEN_H_
-#endif
 
 #ifdef _WIN32
 #include <shlwapi.h>
@@ -89,9 +85,7 @@ done:
     return err;
 }
 
-xgen();
-enum token_kind
-{
+prexy enum token_kind {
     TOK_NONE,
     TOK_COMMENT,
     TOK_PATTERN,
@@ -100,7 +94,7 @@ enum token_kind
     TOK_CMD,
     TOK_EOF,
 };
-static x_enum_to_cstr_impl(token_kind);
+static prexy_impl(token_kind, x_enum_to_cstr);
 
 struct token
 {
@@ -283,15 +277,13 @@ static struct file_pos find_file_pos( //
     return pos;
 }
 
-xgen();
-enum parser_state
-{
+prexy enum parser_state {
     PS_LINE_START,
     PS_PATTERN,
     PS_PATTERN_DELIM,
     PS_COMMAND,
 };
-static x_enum_to_cstr_impl(parser_state);
+static prexy_impl(parser_state, x_enum_to_cstr);
 
 struct fnmar_parser
 {
@@ -561,12 +553,11 @@ done:
     return err;
 }
 
-xgen();
-struct cli
+prexy struct cli
 {
     char const *filename;
 
-    xattr(
+    px_attr(
         cliopt_attr,
         .name = "--config",
         .short_name = 'c',
@@ -574,7 +565,7 @@ struct cli
     );
     char const *config_filename;
 };
-static cliopt_x_from_args_impl(cli);
+static prexy_impl_attr(cli, cliopt_from_args, cliopt_attr);
 
 int main(int const argc, char const *const *const argv)
 {
