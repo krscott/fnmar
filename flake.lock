@@ -64,7 +64,7 @@
         "type": "indirect"
       }
     },
-    "prexy-flake": {
+    "prexy": {
       "inputs": {
         "flake-utils": "flake-utils_2",
         "nixpkgs": "nixpkgs_2"
@@ -87,7 +87,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "prexy-flake": "prexy-flake"
+        "prexy": "prexy"
       }
     },
     "systems": {

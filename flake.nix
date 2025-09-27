@@ -1,14 +1,14 @@
 {
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    prexy-flake.url = "github:krscott/prexy";
+    prexy.url = "github:krscott/prexy";
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
-    prexy-flake,
+    prexy,
   }: let
     supportedSystems = [
       "x86_64-linux"
@@ -20,31 +20,30 @@
     flake-utils.lib.eachSystem supportedSystems (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
-        prexy = prexy-flake.packages.${system}.prexy-stage1;
 
         # Final derivation including any overrides made to output package
-        finalDrv = self.packages.${system}.fnmar;
+        inherit (self.packages.${system}) fnmar;
       in {
         packages = {
           fnmar = pkgs.callPackage ./. {
-            inherit prexy;
+            prexy = prexy.packages.${system}.prexy-stage1;
             stdenv = pkgs.clangStdenv;
           };
 
-          fnmar-gcc = finalDrv.override {
+          fnmar-gcc = fnmar.override {
             inherit (pkgs) stdenv;
           };
 
-          fnmar-win = finalDrv.override {
+          fnmar-win = fnmar.override {
             inherit (pkgs.pkgsCross.mingwW64) stdenv;
           };
 
-          default = finalDrv;
+          default = fnmar;
         };
 
         devShells = {
           default = pkgs.mkShell {
-            inputsFrom = [finalDrv];
+            inputsFrom = [fnmar];
             nativeBuildInputs = with pkgs; [
               shfmt
               alejandra
