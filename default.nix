@@ -2,12 +2,13 @@
   cmake,
   lib,
   stdenv,
+  prexy,
 }:
 stdenv.mkDerivation {
   name = "fnmar";
   src = lib.cleanSource ./.;
 
-  nativeBuildInputs = [cmake];
+  nativeBuildInputs = [cmake prexy];
 
   configurePhase = ''
     cmake -B build
