@@ -77,4 +77,16 @@
       .short_name = 'v',                                                       \
       .help = "Print debug messages")
 
+#define cli_FIELDTYPE_filename char const *
+#define cli_IS_MUT_PTR_filename 0
+#define cli_IS_CONST_PTR_filename 1
+#define cli_PTRTYPE_filename char
+#define cli_FIELDTYPE_config_filename char const *
+#define cli_IS_MUT_PTR_config_filename 0
+#define cli_IS_CONST_PTR_config_filename 1
+#define cli_PTRTYPE_config_filename char
+#define cli_FIELDTYPE_verbose bool
+#define cli_IS_MUT_PTR_verbose 0
+#define cli_IS_CONST_PTR_verbose 0
+
 #endif
