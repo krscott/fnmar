@@ -4,7 +4,7 @@
 #include "prexy.h"
 #include <assert.h>
 
-prexy_tag(to_cstr);
+prexy_namespace(to_cstr);
 
 #define X_CASE_TO_CSTR(x)                                                      \
     case x:                                                                    \
