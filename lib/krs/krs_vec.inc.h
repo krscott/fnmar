@@ -1,13 +1,15 @@
 // Repeatable Trait - no header guards
 
-#include "prexy.h"
-
-#ifndef PREXY_EXTEND
+#ifndef PREXY_EXPAND
 #include "krs_cc_ext.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #endif
+
+#include "prexy.h"
 
 #ifndef Vec
 // For local LSP support
@@ -20,22 +22,32 @@ struct develop_vec
 #define Vec develop_vec
 #define develop_vec_PTRTYPE_ptr int
 #define VEC_IMPLEMENTATION
+// #define VEC_OPT_INFALLIBLE
 #endif
 
 #ifndef vec_realloc
-#ifndef PREXY_EXTEND
+#ifndef PREXY_EXPAND
 #include <stdlib.h>
 #endif
 #define vec_realloc(vec, p, size) realloc(p, size)
 #define vec_free(vec, p) free(p)
 #endif
 
+#ifdef VEC_OPT_INFALLIBLE
+#define alloc_fn void
+#else
+#define alloc_fn nodiscard bool
+#endif
+
 void prexy_methodname(Vec, deinit)(struct Vec *vec);
-nodiscard bool prexy_methodname(Vec, reserve)( //
+alloc_fn prexy_methodname(Vec, reserve)( //
     struct Vec *const vec,
     size_t const n
 );
-nodiscard bool prexy_methodname(Vec, push)(
+alloc_fn prexy_methodname(Vec, append)(
+    struct Vec *const vec, prexy_ptr_typeof(Vec, ptr) const *arr, size_t const n
+);
+alloc_fn prexy_methodname(Vec, push)(
     struct Vec *vec, prexy_ptr_typeof(Vec, ptr) elem
 );
 nodiscard bool prexy_methodname(Vec, pop)(
@@ -61,7 +73,7 @@ void prexy_methodname(Vec, deinit)(struct Vec *const vec)
     vec_free(vec, vec->ptr);
 }
 
-nodiscard bool prexy_methodname(Vec, reserve)( //
+alloc_fn prexy_methodname(Vec, reserve)( //
     struct Vec *const vec,
     size_t const n
 )
@@ -103,21 +115,52 @@ nodiscard bool prexy_methodname(Vec, reserve)( //
         }
     }
 
+#ifdef VEC_OPT_INFALLIBLE
+    if (!success)
+    {
+        // TODO: panic
+        assert(success && "vec reserve failed");
+        exit(1);
+    }
+#else
     return success;
+#endif
 }
 
-nodiscard bool prexy_methodname(Vec, push)(
-    struct Vec *const vec, prexy_ptr_typeof(Vec, ptr) const elem
+alloc_fn prexy_methodname(Vec, append)(
+    struct Vec *const vec, prexy_ptr_typeof(Vec, ptr) const *arr, size_t const n
 )
 {
-    bool const success = prexy_methodname(Vec, reserve)(vec, 1);
+#ifdef VEC_OPT_INFALLIBLE
+
+    prexy_methodname(Vec, reserve)(vec, n);
+    memmove(&vec->ptr[vec->len], arr, n);
+    vec->len += n;
+
+#else
+
+    bool const success = prexy_methodname(Vec, reserve)(vec, n);
 
     if (success)
     {
-        vec->ptr[vec->len++] = elem;
+        memmove(&vec->ptr[vec->len], arr, n);
+        vec->len += n;
     }
 
     return success;
+
+#endif
+}
+
+alloc_fn prexy_methodname(Vec, push)(
+    struct Vec *const vec, prexy_ptr_typeof(Vec, ptr) const elem
+)
+{
+#ifdef VEC_OPT_INFALLIBLE
+    prexy_methodname(Vec, append)(vec, &elem, 1);
+#else
+    return prexy_methodname(Vec, append)(vec, &elem, 1);
+#endif
 }
 
 nodiscard bool prexy_methodname(Vec, pop)(
